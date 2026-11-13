@@ -200,9 +200,7 @@
     let calMonth = new Date().getMonth();
     let selectedCalDate = formatYMD(new Date());
 
-    // 初期化
     window.addEventListener('DOMContentLoaded', async () => {
-      // OAuth2リダイレクト後のトークン処理
       if (window.location.hash.includes('access_token=')) {
         const params = new URLSearchParams(window.location.hash.substring(1));
         const token = params.get('access_token');
@@ -240,7 +238,7 @@
     });
 
     function startLogin() {
-      const url = `https://discord.com/api/oauth2/authorize?client_id=${CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(CONFIG.REDIRECT_URI)}&response_type=token&scope=identify`;
+      const url = `https://discord.com/api/oauth2/authorize?client_id=${CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(CONFIG.REDIRECT_URI)}&response_type=token&scope=identify%20guilds`;
       window.location.href = url;
     }
 
@@ -261,12 +259,12 @@
       document.getElementById('user-avatar').src = currentUser.avatar;
     }
 
-    // GASからデータ取得
     async function fetchData() {
       setLoading(true);
       hideError();
       try {
-        const url = `${CONFIG.GAS_URL}?action=getData&userId=${encodeURIComponent(currentUser.id)}`;
+        const token = localStorage.getItem('discord_token');
+        const url = `${CONFIG.GAS_URL}?action=getData&userId=${encodeURIComponent(currentUser.id)}&token=${encodeURIComponent(token)}`;
         const res = await fetch(url);
         const data = await res.json();
         if (data.status !== 'ok') {
@@ -283,7 +281,6 @@
       }
     }
 
-    // 予定の登録
     async function submitSchedule(e) {
       e.preventDefault();
       const btn = document.getElementById('submit-btn');
@@ -310,6 +307,7 @@
           body: JSON.stringify({
             action: 'add',
             userId: currentUser.id,
+            token: localStorage.getItem('discord_token'),
             items
           })
         });
@@ -330,7 +328,6 @@
       }
     }
 
-    // 予定の削除
     async function deleteSchedule(id, title) {
       if (!confirm(`「${title}」を削除しますか？`)) return;
       setLoading(true);
@@ -341,6 +338,7 @@
           body: JSON.stringify({
             action: 'delete',
             userId: currentUser.id,
+            token: localStorage.getItem('discord_token'),
             id
           })
         });
@@ -357,7 +355,6 @@
       }
     }
 
-    // 描画処理
     function renderAll() {
       renderList();
       renderCalendar();
@@ -461,7 +458,6 @@
       }).join('');
     }
 
-    // UI操作系
     function switchTab(tab) {
       currentTab = tab;
       ['list', 'cal', 'rules'].forEach(t => {
