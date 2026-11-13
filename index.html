@@ -27,6 +27,7 @@
   </style>
 </head>
 <body class="bg-[#FFF9FA] text-[#4A3F44] min-h-screen pb-28 selection:bg-rose-200 selection:text-rose-900">
+  <div id="boot-screen" class="min-h-screen flex items-center justify-center text-rose-400 text-sm font-bold">🌸 読み込み中...</div>
   <div id="login-screen" class="hidden min-h-screen flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-[#FFF2F5] via-[#FFF9FA] to-[#FFF5F7]">
     <div class="bg-white/95 border border-rose-100 rounded-[32px] p-8 max-w-sm w-full soft-card">
       <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-gradient-to-tr from-rose-100 to-pink-50 border border-rose-200/70 flex items-center justify-center text-3xl">🌸</div>
@@ -163,7 +164,7 @@
       </div>
     </nav>
   </div>
-  <div id="add-modal" class="hidden fixed inset-0 bg-[#4A3F44]/40 backdrop-blur-xs z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div id="add-modal" class="hidden fixed inset-0 bg-[#4A3F44]/40 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-white border-t sm:border border-rose-100 w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] p-5 max-h-[92vh] overflow-y-auto shadow-2xl">
       <div class="flex items-center justify-between mb-4 pb-3 border-b border-rose-100">
         <h3 id="modal-title" class="text-base font-bold text-[#4A3F44]">🌷 新しい予定を追加</h3>
@@ -216,9 +217,9 @@
     </div>
   </div>
   <script>
-    let currentUser = null, allSchedules = [], allRules = [];
-    let currentFilter = 'all', currentCatFilter = 'all', currentTab = 'list', editingScheduleId = null, showPast = false;
-    let calYear = new Date().getFullYear(), calMonth = new Date().getMonth(), selectedCalDate = formatYMD(new Date());
+    var currentUser = null, allSchedules = [], allRules = [];
+    var currentFilter = 'all', currentCatFilter = 'all', currentTab = 'list', editingScheduleId = null, showPast = false;
+    var calYear = new Date().getFullYear(), calMonth = new Date().getMonth(), selectedCalDate = formatYMD(new Date());
 
     window.addEventListener('DOMContentLoaded', async () => {
       const hourSel = document.getElementById('rule-hour');
@@ -256,8 +257,13 @@
       window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(CONFIG.REDIRECT_URI)}&response_type=token&scope=identify%20guilds`;
     }
     function logout() { localStorage.removeItem('discord_token'); location.reload(); }
-    function showLogin() { document.getElementById('login-screen').classList.remove('hidden'); document.getElementById('app-screen').classList.add('hidden'); }
+    function showLogin() {
+      document.getElementById('boot-screen').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('app-screen').classList.add('hidden');
+    }
     function showApp() {
+      document.getElementById('boot-screen').classList.add('hidden');
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('app-screen').classList.remove('hidden');
       document.getElementById('user-name').textContent = currentUser.name;
@@ -395,13 +401,7 @@
     }
 
     function getCatBadgeStyle(cat) {
-      const styles = [
-        'bg-rose-100/80 text-rose-600',
-        'bg-purple-100/80 text-purple-600',
-        'bg-sky-100/80 text-sky-600',
-        'bg-amber-100/80 text-amber-700',
-        'bg-teal-100/80 text-teal-700'
-      ];
+      const styles = ['bg-rose-100/80 text-rose-600', 'bg-purple-100/80 text-purple-600', 'bg-sky-100/80 text-sky-600', 'bg-amber-100/80 text-amber-700', 'bg-teal-100/80 text-teal-700'];
       let hash = 0;
       for (let i = 0; i < String(cat).length; i++) hash = String(cat).charCodeAt(i) + ((hash << 5) - hash);
       return styles[Math.abs(hash) % styles.length];
