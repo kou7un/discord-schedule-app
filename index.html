@@ -3,2028 +3,543 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Discord 予定管理アプリ</title>
-  <!-- Tailwind CSS (CDN) -->
+  <title>Discord 予定管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts (Inter & Noto Sans JP) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <!-- Lucide Icons (CDN) -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
   <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Inter"', '"Noto Sans JP"', 'sans-serif'],
-          },
-          colors: {
-            discord: {
-              blurple: '#5865F2',
-              blurpleHover: '#4752C4',
-              green: '#23A55A',
-              greenHover: '#1E8E4E',
-              dark: '#2B2D31',
-              darker: '#1E1F22',
-              lightBg: '#F2F3F5',
-            }
-          }
-        }
-      }
+    // ==========================================
+    // ★ ここだけ自分の情報に書き換えてください ★
+    // ==========================================
+    const CONFIG = {
+      CLIENT_ID: '1570627417616420985',
+      GAS_URL: 'https://script.google.com/macros/s/AKfycbwhmsxwble0T1jWNaycZlyxOuc0pS1xoPdZ5icpB5I8F1hkwlsEw9seWd4jY_mwYZmpeQ/exec',
+      REDIRECT_URI: 'https://kou7un.github.io/discord-schedule-app/'
     };
   </script>
-
   <style>
-    /* スクロールバーの視認性向上とスムーズな操作感 */
-    body {
-      font-family: 'Inter', 'Noto Sans JP', sans-serif;
-      background-color: #F4F5F7;
-      color: #1E293B;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #CBD5E1;
-      border-radius: 9999px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #94A3B8;
-    }
-    /* モーダルアニメーション */
-    @keyframes fadeInScale {
-      from {
-        opacity: 0;
-        transform: scale(0.96) translateY(8px);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
-    }
-    .modal-animate {
-      animation: fadeInScale 0.18s ease-out forwards;
-    }
+    input, select, textarea { font-size: 16px !important; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans pb-24">
 
-  <!-- =====================================================================
-       ヘッダーナビゲーション
-       ===================================================================== -->
-  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
-      <!-- アプリタイトル & 接続ステータス -->
-      <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-9 h-9 rounded-xl bg-discord-blurple text-white flex items-center justify-center shadow-sm shrink-0">
-          <i data-lucide="calendar-check-2" class="w-5 h-5"></i>
-        </div>
-        <div class="min-w-0">
-          <h1 class="text-base sm:text-lg font-bold text-slate-800 truncate leading-tight">Discord 予定管理</h1>
-          <div class="flex items-center gap-1.5 text-[11px] text-slate-500">
-            <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-            <span id="syncStatusText" class="truncate">ローカル保存モード (GitHub Pages対応)</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 右側コントロール群 -->
-      <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-        <!-- 複数選択モード切替ボタン -->
-        <button
-          id="btnToggleMultiSelect"
-          type="button"
-          class="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition shadow-xs"
-          title="複数の日付をタップして予定を一括登録します"
-        >
-          <i data-lucide="check-square" class="w-4 h-4 text-slate-500"></i>
-          <span class="hidden sm:inline">複数選択</span>
-        </button>
-
-        <!-- ルール設定ボタン -->
-        <button
-          id="btnOpenSettings"
-          type="button"
-          class="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition shadow-xs"
-          title="タスク種類と自動通知ルールの設定"
-        >
-          <i data-lucide="settings" class="w-4 h-4 text-slate-600"></i>
-          <span class="hidden md:inline">ルール設定</span>
-        </button>
-
-        <!-- ユーザー切替（Discordログインシミュレーション） -->
-        <div class="relative flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
-          <div class="w-6 h-6 rounded-full bg-discord-blurple text-white flex items-center justify-center text-xs font-bold ml-1 shrink-0" id="currentUserAvatar">
-            A
-          </div>
-          <select
-            id="userSwitcher"
-            aria-label="ログインユーザー切替"
-            class="bg-transparent text-xs sm:text-sm font-semibold text-slate-700 pl-1.5 pr-6 py-1 rounded-lg focus:outline-none cursor-pointer"
-          >
-            <option value="user_a">ユーザーA (自分)</option>
-            <option value="user_b">ユーザーB</option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- =====================================================================
-       メインコンテンツ（PC: 左右2カラム / モバイル: 上下スタック）
-       ===================================================================== -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 pb-24">
-    <!-- 複数選択モード中の案内バナー -->
-    <div id="multiSelectBanner" class="hidden mb-4 bg-indigo-50 border border-indigo-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2.5 text-indigo-900 text-xs sm:text-sm">
-        <i data-lucide="mouse-pointer-click" class="w-5 h-5 text-discord-blurple shrink-0"></i>
-        <span><strong>複数選択モード中：</strong>カレンダー上の日付をタップして複数選択し、同じ予定を一括登録できます。</span>
-      </div>
-      <button type="button" id="btnExitMultiSelectTop" class="text-xs font-semibold text-indigo-700 hover:text-indigo-900 underline shrink-0">
-        終了
-      </button>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-      <!-- -----------------------------------------------------------------
-           左カラム：月間カレンダー (7カラム分)
-           ----------------------------------------------------------------- -->
-      <section class="lg:col-span-7 xl:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <!-- カレンダー上部バー（年月移動・凡例） -->
-        <div class="p-3 sm:p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <button
-              id="btnPrevMonth"
-              type="button"
-              class="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition"
-              aria-label="前の月"
-            >
-              <i data-lucide="chevron-left" class="w-4 h-4"></i>
-            </button>
-            <h2 id="calendarMonthTitle" class="text-lg sm:text-xl font-bold text-slate-800 min-w-[125px] text-center">
-              2026年 11月
-            </h2>
-            <button
-              id="btnNextMonth"
-              type="button"
-              class="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition"
-              aria-label="次の月"
-            >
-              <i data-lucide="chevron-right" class="w-4 h-4"></i>
-            </button>
-            <button
-              id="btnToday"
-              type="button"
-              class="ml-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
-            >
-              今日
-            </button>
-          </div>
-
-          <!-- 凡例（個人 / 全体 / 期限未確定） -->
-          <div class="flex flex-wrap items-center gap-3 text-xs text-slate-600">
-            <span class="flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-discord-blurple inline-block"></span>
-              個人予定
-            </span>
-            <span class="flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-discord-green inline-block"></span>
-              全体予定
-            </span>
-            <span class="flex items-center gap-1.5">
-              <span class="px-1.5 py-0.2 rounded border border-dashed border-amber-500 bg-amber-50 text-amber-700 font-bold text-[10px]">？</span>
-              期限未確定
-            </span>
-          </div>
-        </div>
-
-        <!-- 曜日ヘッダー（日曜日始まり） -->
-        <div class="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 text-center text-xs font-bold py-2">
-          <div class="text-rose-500">日</div>
-          <div class="text-slate-600">月</div>
-          <div class="text-slate-600">火</div>
-          <div class="text-slate-600">水</div>
-          <div class="text-slate-600">木</div>
-          <div class="text-slate-600">金</div>
-          <div class="text-blue-600">土</div>
-        </div>
-
-        <!-- カレンダー日付グリッド -->
-        <div id="calendarGrid" class="grid grid-cols-7 divide-x divide-y divide-slate-100">
-          <!-- JavaScriptで動的に日付セルを生成 -->
-        </div>
-      </section>
-
-      <!-- -----------------------------------------------------------------
-           右カラム：選択日の予定一覧 ＆ 追加パネル (5カラム分)
-           ----------------------------------------------------------------- -->
-      <section class="lg:col-span-5 xl:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col">
-        <!-- 選択日ヘッダー -->
-        <div class="p-4 border-b border-slate-100 flex items-center justify-between gap-2">
-          <div>
-            <p class="text-xs font-medium text-slate-400">選択中の日付</p>
-            <h3 id="selectedDateHeading" class="text-lg font-bold text-slate-800">
-              2026年11月13日 (金)
-            </h3>
-          </div>
-          <button
-            id="btnOpenAddModal"
-            type="button"
-            class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-discord-blurple hover:bg-discord-blurpleHover text-white text-xs sm:text-sm font-semibold shadow-sm transition active:scale-[0.98]"
-          >
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span>この日に追加</span>
-          </button>
-        </div>
-
-        <!-- 選択日の予定リストコンテナ -->
-        <div id="selectedDateEventList" class="p-4 space-y-3 max-h-[540px] overflow-y-auto custom-scrollbar">
-          <!-- JavaScriptで選択日の予定カードを生成 -->
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <!-- =====================================================================
-       複数選択モード用フローティングアクションバー
-       ===================================================================== -->
-  <div
-    id="multiSelectFloatingBar"
-    class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 hidden w-[92%] max-w-lg bg-slate-900 text-white rounded-2xl shadow-xl px-4 py-3 flex items-center justify-between gap-3 border border-slate-700"
-  >
-    <div class="flex items-center gap-2.5">
-      <span id="multiSelectCountBadge" class="px-2.5 py-1 rounded-lg bg-discord-blurple text-white text-xs font-bold">
-        0日選択中
-      </span>
-      <span class="text-xs sm:text-sm text-slate-200">カレンダーをタップして追加</span>
-    </div>
-    <div class="flex items-center gap-2 shrink-0">
-      <button
-        id="btnClearMultiSelect"
-        type="button"
-        class="px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition"
-      >
-        解除
-      </button>
-      <button
-        id="btnBulkAddEvent"
-        type="button"
-        class="px-3.5 py-2 rounded-xl bg-discord-blurple hover:bg-discord-blurpleHover text-white text-xs sm:text-sm font-bold shadow transition disabled:opacity-40 disabled:cursor-not-allowed"
-        disabled
-      >
-        一括追加する
+  <!-- ログイン画面 -->
+  <div id="login-screen" class="hidden min-h-screen flex flex-col items-center justify-center p-6 text-center">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-sm w-full shadow-xl">
+      <div class="text-4xl mb-4">📅</div>
+      <h1 class="text-2xl font-bold mb-2">Discord 予定管理</h1>
+      <p class="text-slate-400 text-sm mb-6">サーバーメンバー専用の予定共有＆自動リマインドアプリ</p>
+      <button onclick="startLogin()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition text-white font-bold py-3.5 px-6 rounded-xl shadow-lg flex items-center justify-center gap-2">
+        <span>Discordでログイン</span>
       </button>
     </div>
   </div>
 
-  <!-- =====================================================================
-       モーダル1：予定の登録・編集フォームモーダル
-       ===================================================================== -->
-  <div id="eventFormModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden my-auto modal-animate">
-      <!-- モーダルヘッダー -->
-      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-        <div class="flex items-center gap-2">
-          <span class="w-8 h-8 rounded-xl bg-discord-blurple/10 text-discord-blurple flex items-center justify-center">
-            <i data-lucide="calendar-plus" class="w-4 h-4"></i>
-          </span>
-          <h3 id="eventFormModalTitle" class="text-base sm:text-lg font-bold text-slate-800">予定を追加</h3>
+  <!-- メイン画面 -->
+  <div id="app-screen" class="hidden max-w-2xl mx-auto">
+    <!-- ヘッダー -->
+    <header class="sticky top-0 z-20 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <img id="user-avatar" src="" alt="" class="w-8 h-8 rounded-full bg-slate-700" />
+        <div>
+          <div id="user-name" class="text-sm font-bold leading-tight"></div>
+          <div class="text-[11px] text-emerald-400">● サーバー認証済み</div>
         </div>
-        <button type="button" class="btnCloseModal p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition" data-target="eventFormModal">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="fetchData()" class="p-2 text-slate-300 hover:text-white bg-slate-800 rounded-lg text-xs" title="更新">🔄 更新</button>
+        <button onclick="logout()" class="p-2 text-slate-400 hover:text-rose-400 text-xs">ログアウト</button>
+      </div>
+    </header>
+
+    <!-- ローディング表示 -->
+    <div id="loading-bar" class="hidden bg-indigo-600 text-white text-xs text-center py-1 animate-pulse">
+      データを同期中...
+    </div>
+
+    <!-- エラー表示 -->
+    <div id="error-box" class="hidden m-4 p-4 bg-rose-950/80 border border-rose-700 rounded-xl text-rose-200 text-sm"></div>
+
+    <!-- タブ切り替え -->
+    <div class="px-4 pt-4">
+      <div class="grid grid-cols-3 bg-slate-800 p-1 rounded-xl text-sm font-medium">
+        <button id="tab-list" onclick="switchTab('list')" class="py-2 rounded-lg bg-indigo-600 text-white transition">📋 予定一覧</button>
+        <button id="tab-cal" onclick="switchTab('cal')" class="py-2 rounded-lg text-slate-400 transition">🗓️ カレンダー</button>
+        <button id="tab-rules" onclick="switchTab('rules')" class="py-2 rounded-lg text-slate-400 transition">🔔 通知設定</button>
+      </div>
+    </div>
+
+    <!-- フィルター（全体 / 個人） -->
+    <div id="filter-bar" class="px-4 pt-3 flex gap-2 text-xs">
+      <button onclick="setFilter('all')" id="flt-all" class="px-3 py-1.5 rounded-full bg-slate-700 text-white font-bold">すべて</button>
+      <button onclick="setFilter('全体')" id="flt-全体" class="px-3 py-1.5 rounded-full bg-slate-800 text-slate-400">📢 全体予定</button>
+      <button onclick="setFilter('個人')" id="flt-個人" class="px-3 py-1.5 rounded-full bg-slate-800 text-slate-400">🔒 個人予定</button>
+    </div>
+
+    <!-- ビュー1：予定一覧 -->
+    <main id="view-list" class="p-4 space-y-3"></main>
+
+    <!-- ビュー2：カレンダー -->
+    <section id="view-cal" class="hidden p-4">
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700">
+        <div class="flex items-center justify-between mb-4">
+          <button onclick="changeMonth(-1)" class="px-3 py-1 bg-slate-700 rounded-lg">◀</button>
+          <h2 id="cal-title" class="font-bold text-lg"></h2>
+          <button onclick="changeMonth(1)" class="px-3 py-1 bg-slate-700 rounded-lg">▶</button>
+        </div>
+        <div class="calendar-grid text-center text-xs text-slate-400 mb-2">
+          <div class="text-rose-400">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="text-sky-400">土</div>
+        </div>
+        <div id="cal-days" class="calendar-grid gap-1 text-center text-sm"></div>
+      </div>
+      <div id="cal-selected-list" class="mt-4 space-y-2"></div>
+    </section>
+
+    <!-- ビュー3：通知ルール一覧 -->
+    <section id="view-rules" class="hidden p-4 space-y-3">
+      <div class="bg-slate-800/70 border border-slate-700 rounded-xl p-4 text-xs text-slate-300 leading-relaxed">
+        カテゴリごとに「何日前の何時にDiscordへ自動通知するか」が設定されています。変更したい場合はスプレッドシートの「通知ルール」シートを編集してください。
+      </div>
+      <div id="rules-list" class="space-y-2"></div>
+    </section>
+
+    <!-- 右下の追加ボタン -->
+    <button onclick="openModal()" class="fixed bottom-6 right-6 bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition text-white font-bold w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-3xl z-30">
+      ＋
+    </button>
+  </div>
+
+  <!-- 予定追加モーダル -->
+  <div id="add-modal" class="hidden fixed inset-0 bg-black/75 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-slate-800 border-t sm:border border-slate-700 w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">新しい予定を追加</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xl px-2">✕</button>
       </div>
 
-      <!-- フォーム本体 -->
-      <form id="eventForm" class="p-5 space-y-4 max-h-[82vh] overflow-y-auto custom-scrollbar">
-        <input type="hidden" id="formEventId" value="" />
-
-        <!-- 1. 対象日（単日入力 or 複数日バッジ表示） -->
+      <form id="add-form" onsubmit="submitSchedule(event)" class="space-y-4">
+        <!-- 種別 -->
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">対象日</label>
-          <div id="singleDateInputWrapper">
-            <input
-              type="date"
-              id="formDate"
-              required
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-discord-blurple/30 focus:border-discord-blurple"
-            />
-          </div>
-          <div id="multiDateBadgesWrapper" class="hidden p-3 rounded-xl bg-indigo-50/70 border border-indigo-100">
-            <p class="text-xs font-semibold text-indigo-800 mb-2">選択された複数の日付に同じ予定を一括登録します：</p>
-            <div id="multiDateBadgesList" class="flex flex-wrap gap-1.5"></div>
-          </div>
-        </div>
-
-        <!-- 2. 確定ステータス & 予定の種類（2カラム） -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <!-- 確定 / 期限未確定 -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">期限の状態</label>
-            <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
-              <label class="cursor-pointer">
-                <input type="radio" name="formStatus" value="confirmed" class="peer sr-only" checked />
-                <div class="text-center py-2 px-2 rounded-lg text-xs font-semibold text-slate-600 peer-checked:bg-white peer-checked:text-slate-900 peer-checked:shadow-xs transition">
-                  確定
-                </div>
-              </label>
-              <label class="cursor-pointer">
-                <input type="radio" name="formStatus" value="tentative" class="peer sr-only" />
-                <div class="text-center py-2 px-2 rounded-lg text-xs font-semibold text-slate-600 peer-checked:bg-amber-500 peer-checked:text-white peer-checked:shadow-xs transition">
-                  ？期限未確定
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- 個人予定 / 全体予定 -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">予定の種類（通知先）</label>
-            <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
-              <label class="cursor-pointer">
-                <input type="radio" name="formVisibility" value="personal" class="peer sr-only" checked />
-                <div class="text-center py-2 px-2 rounded-lg text-xs font-semibold text-slate-600 peer-checked:bg-discord-blurple peer-checked:text-white peer-checked:shadow-xs transition">
-                  個人 (DM)
-                </div>
-              </label>
-              <label class="cursor-pointer">
-                <input type="radio" name="formVisibility" value="shared" class="peer sr-only" />
-                <div class="text-center py-2 px-2 rounded-lg text-xs font-semibold text-slate-600 peer-checked:bg-discord-green peer-checked:text-white peer-checked:shadow-xs transition">
-                  全体 (Ch)
-                </div>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- 期限未確定時の補足メッセージ -->
-        <div id="tentativeHintBox" class="hidden px-3.5 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
-          <i data-lucide="help-circle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
-          <span>「〜頃」の予想日として登録されます。カレンダー上で点線枠になり、Discord通知にも<strong>【期限未確定】</strong>と明記されます。</span>
-        </div>
-
-        <!-- 3. タスクの種類 ＆ 自動通知ルールプレビュー -->
-        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-          <div>
-            <label for="formTaskType" class="block text-xs font-bold text-slate-700 mb-1.5">タスクの種類</label>
-            <select
-              id="formTaskType"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-discord-blurple/30 focus:border-discord-blurple"
-            >
-              <!-- JSで「通常予定」＋ルール設定のタスク種類を動的生成 -->
-            </select>
-          </div>
-
-          <!-- 「通常予定」選択時のみ表示される通知タイミング選択 -->
-          <div id="normalNotifyWrapper">
-            <label for="formNormalNotify" class="block text-xs font-bold text-slate-700 mb-1.5">通常予定の通知タイミング</label>
-            <select
-              id="formNormalNotify"
-              class="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-discord-blurple/30"
-            >
-              <option value="none">通知しない</option>
-              <option value="1h_before">予定時刻の1時間前</option>
-              <option value="same_day_9">当日の朝 09:00</option>
-              <option value="1d_before_20" selected>前日の 20:00</option>
-              <option value="3d_before_20">3日前の 20:00</option>
-            </select>
-          </div>
-
-          <!-- カスタムタスク選択時の自動適用ルール表示 -->
-          <div id="autoRulePreviewWrapper" class="hidden">
-            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-              <i data-lucide="bell-ring" class="w-3.5 h-3.5 text-discord-blurple"></i>
-              適用されるDiscord自動通知タイミング
-            </p>
-            <div id="autoRulePreviewList" class="space-y-1.5 text-xs"></div>
-          </div>
-        </div>
-
-        <!-- 4. 予定名（必須） -->
-        <div>
-          <label for="formTitle" class="block text-xs font-bold text-slate-700 mb-1.5">
-            予定名 <span class="text-rose-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="formTitle"
-            required
-            placeholder="例：英語レポート、数学小テスト、サーバー定例会"
-            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-discord-blurple/30 focus:border-discord-blurple"
-          />
-        </div>
-
-        <!-- 5. 範囲（任意） -->
-        <div>
-          <label for="formScope" class="block text-xs font-bold text-slate-700 mb-1.5">
-            課題・テスト範囲 <span class="text-slate-400 font-normal">(任意)</span>
-          </label>
-          <input
-            type="text"
-            id="formScope"
-            placeholder="例：教科書 P.30〜45、単語帳 Unit 4"
-            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-discord-blurple/30 focus:border-discord-blurple"
-          />
-        </div>
-
-        <!-- 6. 時刻（時間指定 or 終日） -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label for="formTime" class="block text-xs font-bold text-slate-700">時刻</label>
-            <label class="flex items-center gap-1.5 text-xs font-medium text-slate-600 cursor-pointer">
-              <input type="checkbox" id="formIsAllDay" class="rounded text-discord-blurple focus:ring-discord-blurple" />
-              <span>終日（時間指定なし）</span>
+          <label class="block text-xs text-slate-400 mb-1">公開範囲・通知先</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="type" value="全体" checked class="peer hidden" />
+              <div class="peer-checked:bg-indigo-600 peer-checked:border-indigo-400 bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-center text-sm font-bold">
+                📢 全体（チャンネル通知）
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="type" value="個人" class="peer hidden" />
+              <div class="peer-checked:bg-emerald-600 peer-checked:border-emerald-400 bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-center text-sm font-bold">
+                🔒 個人（DM通知）
+              </div>
             </label>
           </div>
-          <input
-            type="time"
-            id="formTime"
-            value="17:00"
-            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-discord-blurple/30 focus:border-discord-blurple disabled:bg-slate-100 disabled:text-slate-400"
-          />
         </div>
 
-        <!-- 7. 詳細・メモ（任意） -->
+        <!-- カテゴリ -->
         <div>
-          <label for="formMemo" class="block text-xs font-bold text-slate-700 mb-1.5">
-            詳細・メモ <span class="text-slate-400 font-normal">(任意)</span>
-          </label>
-          <textarea
-            id="formMemo"
-            rows="2"
-            placeholder="持ち物や提出方法、補足事項など"
-            class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-discord-blurple/30 focus:border-discord-blurple"
-          ></textarea>
+          <label class="block text-xs text-slate-400 mb-1">カテゴリ</label>
+          <select id="inp-category" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white">
+            <option value="課題">📚 課題</option>
+            <option value="テスト">📝 テスト</option>
+            <option value="行事">🏫 行事</option>
+            <option value="バイト">💼 バイト</option>
+            <option value="個人予定">📌 個人予定</option>
+          </select>
         </div>
 
-        <!-- 送信ボタン -->
-        <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
-          <button
-            type="button"
-            class="btnCloseModal px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-100 transition"
-            data-target="eventFormModal"
-          >
-            キャンセル
-          </button>
-          <button
-            type="submit"
-            id="btnSubmitEventForm"
-            class="px-5 py-2.5 rounded-xl bg-discord-blurple hover:bg-discord-blurpleHover text-white text-xs sm:text-sm font-bold shadow-sm transition active:scale-[0.98]"
-          >
-            登録する
-          </button>
+        <!-- タイトル -->
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">タイトル <span class="text-rose-400">*</span></label>
+          <input id="inp-title" type="text" required placeholder="例：数学ワーク提出 / 英語小テスト" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" />
         </div>
+
+        <!-- 日付（複数日対応） -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs text-slate-400">日付 <span class="text-rose-400">*</span></label>
+            <button type="button" onclick="addDateInput()" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold">＋ 日付を追加（複数日一括）</button>
+          </div>
+          <div id="date-inputs" class="space-y-2">
+            <input type="date" required class="inp-date w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" />
+          </div>
+        </div>
+
+        <!-- 時間 -->
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">時間（任意）</label>
+          <input id="inp-time" type="time" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" />
+        </div>
+
+        <!-- 課題範囲 -->
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">課題範囲・持ち物（任意）</label>
+          <input id="inp-scope" type="text" placeholder="例：P.24〜31、ノート提出" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" />
+        </div>
+
+        <!-- メモ -->
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">メモ（任意）</label>
+          <textarea id="inp-memo" rows="2" placeholder="補足があれば入力" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></textarea>
+        </div>
+
+        <button type="submit" id="submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-lg">
+          登録する
+        </button>
       </form>
     </div>
   </div>
 
-  <!-- =====================================================================
-       モーダル2：予定の詳細確認 ＆ Discord通知プレビューモーダル
-       ===================================================================== -->
-  <div id="eventDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden my-auto modal-animate">
-      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-        <div id="detailBadges" class="flex flex-wrap items-center gap-1.5"></div>
-        <button type="button" class="btnCloseModal p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition" data-target="eventDetailModal">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <div class="p-5 space-y-4">
-        <div>
-          <h3 id="detailTitle" class="text-xl font-bold text-slate-900"></h3>
-          <div class="mt-2 flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-600">
-            <span class="flex items-center gap-1.5">
-              <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i>
-              <span id="detailDateTime"></span>
-            </span>
-            <span class="flex items-center gap-1.5">
-              <i data-lucide="tag" class="w-4 h-4 text-slate-400"></i>
-              <span id="detailTaskType"></span>
-            </span>
-          </div>
-        </div>
-
-        <!-- 範囲（ある場合のみ表示） -->
-        <div id="detailScopeBox" class="hidden p-3 rounded-xl bg-indigo-50/70 border border-indigo-100 text-xs sm:text-sm text-indigo-950">
-          <span class="font-bold text-indigo-700">範囲：</span>
-          <span id="detailScopeText"></span>
-        </div>
-
-        <!-- メモ（ある場合のみ表示） -->
-        <div id="detailMemoBox" class="hidden p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-700 whitespace-pre-wrap"></div>
-
-        <!-- Discord Bot通知プレビュー（Discord風ダークカード） -->
-        <div>
-          <p class="text-xs font-bold text-slate-500 mb-1.5 flex items-center gap-1.5">
-            <i data-lucide="bot" class="w-4 h-4 text-discord-blurple"></i>
-            Discord Bot 通知プレビュー
-          </p>
-          <div class="rounded-xl bg-[#2B2D31] text-slate-100 p-3.5 text-xs space-y-2 shadow-inner">
-            <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded-full bg-discord-blurple flex items-center justify-center text-white font-bold text-[10px]">
-                BOT
-              </div>
-              <span class="font-bold text-white">予定通知Bot</span>
-              <span class="px-1.5 py-0.2 rounded bg-discord-blurple text-[10px] font-bold text-white">アプリ</span>
-              <span id="detailDiscordTarget" class="text-[11px] text-slate-400 ml-auto"></span>
-            </div>
-            <!-- Embed風ブロック -->
-            <div id="detailDiscordEmbed" class="border-l-4 border-discord-blurple bg-[#1E1F22] rounded-r-lg p-3 space-y-1.5">
-              <div id="detailDiscordEmbedTitle" class="font-bold text-sm text-white"></div>
-              <div id="detailDiscordEmbedBody" class="text-slate-300 leading-relaxed whitespace-pre-line"></div>
-            </div>
-            <!-- 送信予定日時リスト -->
-            <div class="pt-1 border-t border-slate-700/80 text-[11px] text-slate-300">
-              <span class="text-slate-400 font-semibold">通知スケジュール：</span>
-              <span id="detailNotifyScheduleText"></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- アクションボタン（削除・編集） -->
-        <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
-          <button
-            type="button"
-            id="btnDeleteEventTrigger"
-            class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-rose-600 hover:bg-rose-50 transition"
-          >
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-            <span>削除</span>
-          </button>
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="btnCloseModal px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-100 transition"
-              data-target="eventDetailModal"
-            >
-              閉じる
-            </button>
-            <button
-              type="button"
-              id="btnEditEventTrigger"
-              class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-semibold transition"
-            >
-              <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
-              <span>編集する</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- =====================================================================
-       モーダル3：ルール設定 ＆ GAS連携設定モーダル
-       ===================================================================== -->
-  <div id="settingsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden my-auto modal-animate">
-      <!-- ヘッダー -->
-      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-        <div class="flex items-center gap-2">
-          <i data-lucide="settings" class="w-5 h-5 text-slate-700"></i>
-          <h3 class="text-base sm:text-lg font-bold text-slate-800">設定（タスク通知ルール・GAS連携）</h3>
-        </div>
-        <button type="button" class="btnCloseModal p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition" data-target="settingsModal">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <!-- タブ切り替え -->
-      <div class="flex border-b border-slate-200 bg-slate-50 px-5 gap-4">
-        <button
-          type="button"
-          class="settings-tab py-3 text-xs sm:text-sm font-bold border-b-2 border-discord-blurple text-discord-blurple transition"
-          data-tab="tabRules"
-        >
-          タスク種類と通知ルール（共通）
-        </button>
-        <button
-          type="button"
-          class="settings-tab py-3 text-xs sm:text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition"
-          data-tab="tabGas"
-        >
-          GAS連携・データ管理
-        </button>
-      </div>
-
-      <!-- タブ1：タスク種類＆通知ルール管理 -->
-      <div id="tabRules" class="p-5 space-y-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
-        <p class="text-xs text-slate-600 leading-relaxed">
-          ここで設定したタスク種類と通知タイミングは<strong>サーバー全員で共有</strong>されます。「月曜日の小テストなら金曜日（3日前）にも通知」のように、曜日条件付きの複数通知も設定できます。
-        </p>
-
-        <!-- 新しいタスク種類の追加フォーム -->
-        <div class="flex gap-2">
-          <input
-            type="text"
-            id="newTaskTypeName"
-            placeholder="新しいタスク名（例：ゼミ発表、アルバイト）"
-            class="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-discord-blurple/30"
-          />
-          <button
-            type="button"
-            id="btnAddTaskType"
-            class="px-4 py-2 rounded-xl bg-discord-blurple hover:bg-discord-blurpleHover text-white text-xs sm:text-sm font-bold shrink-0 transition"
-          >
-            ＋ タスク追加
-          </button>
-        </div>
-
-        <!-- タスク種類ごとのルールカード一覧 -->
-        <div id="taskRulesContainer" class="space-y-4">
-          <!-- JSで動的描画 -->
-        </div>
-      </div>
-
-      <!-- タブ2：GAS連携設定 & サンプルリセット -->
-      <div id="tabGas" class="hidden p-5 space-y-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
-        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-          <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-            <i data-lucide="cloud" class="w-4 h-4 text-discord-blurple"></i>
-            Google Apps Script (GAS) Webアプリ連携
-          </h4>
-          <p class="text-xs text-slate-600 leading-relaxed">
-            後ほど作成するGASのデプロイURL（<code>https://script.google.com/macros/s/.../exec</code>）を貼り付けて保存すると、スプレッドシートと自動同期します。未入力の間はブラウザ内（localStorage）に自動保存されます。
-          </p>
-          <div>
-            <label for="inputGasUrl" class="block text-xs font-bold text-slate-700 mb-1">GAS Webアプリ URL</label>
-            <input
-              type="url"
-              id="inputGasUrl"
-              placeholder="https://script.google.com/macros/s/XXXXX/exec"
-              class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-discord-blurple/30"
-            />
-          </div>
-          <div class="flex justify-end">
-            <button
-              type="button"
-              id="btnSaveGasUrl"
-              class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-bold transition"
-            >
-              連携URLを保存
-            </button>
-          </div>
-        </div>
-
-        <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2.5">
-          <h4 class="text-sm font-bold text-amber-900">デモデータの初期化</h4>
-          <p class="text-xs text-amber-800">
-            動作確認用のサンプル予定（期限未確定の英語レポート、月曜日の小テスト、全体予定など）と初期ルールをリセットして復元します。
-          </p>
-          <button
-            type="button"
-            id="btnResetDemoData"
-            class="px-3.5 py-2 rounded-xl bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 text-xs font-bold transition"
-          >
-            サンプルデータを初期状態に戻す
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- =====================================================================
-       モーダル4：カスタム削除確認モーダル（confirm()の代替）
-       ===================================================================== -->
-  <div id="confirmDeleteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-sm p-5 space-y-4 modal-animate">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
-          <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-        </div>
-        <div>
-          <h4 class="text-base font-bold text-slate-900">予定を削除しますか？</h4>
-          <p id="confirmDeleteText" class="text-xs text-slate-500 mt-0.5">この操作は取り消せません。</p>
-        </div>
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button
-          type="button"
-          class="btnCloseModal px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
-          data-target="confirmDeleteModal"
-        >
-          キャンセル
-        </button>
-        <button
-          type="button"
-          id="btnConfirmDeleteExecute"
-          class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition"
-        >
-          削除する
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- =====================================================================
-       トースト通知コンテナ（alert()の代替）
-       ===================================================================== -->
-  <div id="toastContainer" class="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-  <!-- =====================================================================
-       アプリケーションロジック (JavaScript)
-       ===================================================================== -->
   <script>
-    /**
-     * Discord 予定管理アプリ - フロントエンドロジック
-     * 特徴:
-     * - localStorage による即時永続化 ＋ GAS_API_URL 設定時のAPI同期ラッパー完備
-     * - 日曜始まり月間カレンダー / 複数日付一括登録モード
-     * - 個人予定(ユーザー別)と全体予定(サーバー共通)の切り分け
-     * - 期限未確定（〜頃）の視覚的区別＆Discord文面反映
-     * - タスク種別ごとの自動通知ルール（曜日条件付き複数通知）のリアルタイム計算
-     */
+    let currentUser = null;
+    let allSchedules = [];
+    let allRules = [];
+    let currentFilter = 'all';
+    let currentTab = 'list';
+    let calYear = new Date().getFullYear();
+    let calMonth = new Date().getMonth();
+    let selectedCalDate = formatYMD(new Date());
 
-    // =========================================================================
-    // 1. 定数・初期データ定義
-    // =========================================================================
-    const STORAGE_KEYS = {
-      EVENTS: 'discord_sched_events_v1',
-      RULES: 'discord_sched_rules_v1',
-      GAS_URL: 'discord_sched_gas_url_v1',
-    };
-
-    const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
-    const WEEKDAY_FULL_LABELS = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
-
-    // 初期タスク＆通知ルール（サーバー共通）
-    const DEFAULT_TASK_RULES = [
-      {
-        id: 'task_quiz',
-        name: '小テスト',
-        rules: [
-          { id: 'r_q1', daysBefore: 1, time: '20:00', targetWeekday: 'all' },
-          { id: 'r_q2', daysBefore: 3, time: '18:00', targetWeekday: 1 }, // 1 = 月曜日の場合、3日前(金曜日)にも通知
-        ]
-      },
-      {
-        id: 'task_assignment',
-        name: '提出物',
-        rules: [
-          { id: 'r_a1', daysBefore: 3, time: '20:00', targetWeekday: 'all' },
-          { id: 'r_a2', daysBefore: 1, time: '20:00', targetWeekday: 'all' },
-        ]
-      }
-    ];
-
-    // サンプル予定データ（2026年11月基準）
-    function createInitialSampleEvents() {
-      return [
-        {
-          id: 'evt_1',
-          creatorId: 'user_a',
-          title: '英語レポート',
-          date: '2026-11-20',
-          time: '',
-          isAllDay: true,
-          visibility: 'personal',
-          status: 'tentative', // 期限未確定
-          taskTypeId: 'task_assignment',
-          normalNotify: '1d_before_20',
-          scope: '教科書 Unit 3〜4 まとめ（1200語）',
-          memo: '正式な提出日は来週の授業で発表予定。だいたい11月20日頃。'
-        },
-        {
-          id: 'evt_2',
-          creatorId: 'user_a',
-          title: '英単語小テスト',
-          date: '2026-11-16', // 月曜日（金曜にも自動通知される例）
-          time: '09:30',
-          isAllDay: false,
-          visibility: 'shared',
-          status: 'confirmed',
-          taskTypeId: 'task_quiz',
-          normalNotify: '1d_before_20',
-          scope: 'ターゲット1900 No.401〜500',
-          memo: '月曜1限の最初に実施！金曜のうちに範囲確認しておくこと。'
-        },
-        {
-          id: 'evt_3',
-          creatorId: 'user_b',
-          title: 'Discordサーバー定例ゲーム会',
-          date: '2026-11-14',
-          time: '21:00',
-          isAllDay: false,
-          visibility: 'shared',
-          status: 'confirmed',
-          taskTypeId: 'normal',
-          normalNotify: '1h_before',
-          scope: '',
-          memo: 'ボイスチャンネル集合！'
-        },
-        {
-          id: 'evt_4',
-          creatorId: 'user_b',
-          title: 'ユーザーBの個人通院予定',
-          date: '2026-11-18',
-          time: '15:00',
-          isAllDay: false,
-          visibility: 'personal',
-          status: 'confirmed',
-          taskTypeId: 'normal',
-          normalNotify: 'same_day_9',
-          scope: '',
-          memo: 'ユーザーBでログイン時のみ表示される個人予定'
-        },
-        {
-          id: 'evt_5',
-          creatorId: 'user_a',
-          title: '情報工学 課題提出',
-          date: '2026-11-25',
-          time: '23:59',
-          isAllDay: false,
-          visibility: 'shared',
-          status: 'confirmed',
-          taskTypeId: 'task_assignment',
-          normalNotify: '1d_before_20',
-          scope: '第5回演習課題（PDF形式）',
-          memo: 'Moodleからアップロード'
+    // 初期化
+    window.addEventListener('DOMContentLoaded', async () => {
+      // OAuth2リダイレクト後のトークン処理
+      if (window.location.hash.includes('access_token=')) {
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        const token = params.get('access_token');
+        if (token) {
+          localStorage.setItem('discord_token', token);
+          history.replaceState(null, '', window.location.pathname);
         }
-      ];
-    }
+      }
 
-    // =========================================================================
-    // 2. アプリケーション状態 (State)
-    // =========================================================================
-    const state = {
-      currentUserId: 'user_a',
-      viewYear: 2026,
-      viewMonth: 10, // 0-indexed (10 = 11月)
-      selectedDate: '2026-11-13',
-      isMultiSelectMode: false,
-      multiSelectedDates: new Set(),
-      events: [],
-      taskRules: [],
-      gasApiUrl: '',
-      activeDetailEventId: null,
-      pendingDeleteEventId: null,
-    };
+      const token = localStorage.getItem('discord_token');
+      if (!token) {
+        showLogin();
+        return;
+      }
 
-    // =========================================================================
-    // 3. ユーティリティ関数（日付・通知計算・ストレージ）
-    // =========================================================================
-    function formatDateISO(year, monthZeroIndexed, day) {
-      const m = String(monthZeroIndexed + 1).padStart(2, '0');
-      const d = String(day).padStart(2, '0');
-      return `${year}-${m}-${d}`;
-    }
-
-    function parseDateISO(dateStr) {
-      const [y, m, d] = dateStr.split('-').map(Number);
-      return new Date(y, m - 1, d);
-    }
-
-    function formatDisplayDateJP(dateStr) {
-      const dt = parseDateISO(dateStr);
-      const w = WEEKDAY_LABELS[dt.getDay()];
-      return `${dt.getFullYear()}年${dt.getMonth() + 1}月${dt.getDate()}日 (${w})`;
-    }
-
-    function formatShortDateJP(dateStr) {
-      const dt = parseDateISO(dateStr);
-      const w = WEEKDAY_LABELS[dt.getDay()];
-      return `${dt.getMonth() + 1}/${dt.getDate()}(${w})`;
-    }
-
-    function addDaysToISO(dateStr, deltaDays) {
-      const dt = parseDateISO(dateStr);
-      dt.setDate(dt.getDate() + deltaDays);
-      return formatDateISO(dt.getFullYear(), dt.getMonth(), dt.getDate());
-    }
-
-    function generateId(prefix = 'id') {
-      return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    }
-
-    // トースト通知表示（alertの代わり）
-    function showToast(message, type = 'success') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      const bgClass = type === 'error'
-        ? 'bg-rose-600 text-white'
-        : type === 'info'
-          ? 'bg-slate-800 text-white'
-          : 'bg-emerald-600 text-white';
-
-      toast.className = `pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm font-semibold ${bgClass} modal-animate`;
-      toast.innerHTML = `
-        <i data-lucide="${type === 'error' ? 'alert-circle' : 'check-circle-2'}" class="w-4 h-4 shrink-0"></i>
-        <span>${escapeHtml(message)}</span>
-      `;
-      container.appendChild(toast);
-      lucide.createIcons();
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-6px)';
-        toast.style.transition = 'all 0.2s ease';
-        setTimeout(() => toast.remove(), 220);
-      }, 2800);
-    }
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    // データの読み込み＆保存（localStorage + GAS API連携フック）
-    function loadAppData() {
       try {
-        const savedEvents = localStorage.getItem(STORAGE_KEYS.EVENTS);
-        const savedRules = localStorage.getItem(STORAGE_KEYS.RULES);
-        const savedGasUrl = localStorage.getItem(STORAGE_KEYS.GAS_URL);
-
-        state.events = savedEvents ? JSON.parse(savedEvents) : createInitialSampleEvents();
-        state.taskRules = savedRules ? JSON.parse(savedRules) : JSON.parse(JSON.stringify(DEFAULT_TASK_RULES));
-        state.gasApiUrl = savedGasUrl || '';
-
-        if (!savedEvents) localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(state.events));
-        if (!savedRules) localStorage.setItem(STORAGE_KEYS.RULES, JSON.stringify(state.taskRules));
-      } catch (err) {
-        console.error('データ読み込みエラー:', err);
-        state.events = createInitialSampleEvents();
-        state.taskRules = JSON.parse(JSON.stringify(DEFAULT_TASK_RULES));
+        const res = await fetch('https://discord.com/api/v10/users/@me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Token expired');
+        const user = await res.json();
+        currentUser = {
+          id: user.id,
+          name: user.global_name || user.username,
+          avatar: user.avatar
+            ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+            : 'https://cdn.discordapp.com/embed/avatars/0.png'
+        };
+        showApp();
+        await fetchData();
+      } catch (e) {
+        localStorage.removeItem('discord_token');
+        showLogin();
       }
-      updateSyncStatusUI();
+    });
+
+    function startLogin() {
+      const url = `https://discord.com/api/oauth2/authorize?client_id=${CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(CONFIG.REDIRECT_URI)}&response_type=token&scope=identify`;
+      window.location.href = url;
     }
 
-    async function persistData() {
+    function logout() {
+      localStorage.removeItem('discord_token');
+      location.reload();
+    }
+
+    function showLogin() {
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('app-screen').classList.add('hidden');
+    }
+
+    function showApp() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+      document.getElementById('user-name').textContent = currentUser.name;
+      document.getElementById('user-avatar').src = currentUser.avatar;
+    }
+
+    // GASからデータ取得
+    async function fetchData() {
+      setLoading(true);
+      hideError();
       try {
-        localStorage.setItem(STORAGE_KEYS.EVENTS, JSON.stringify(state.events));
-        localStorage.setItem(STORAGE_KEYS.RULES, JSON.stringify(state.taskRules));
-
-        // GAS URLが設定されている場合はバックグラウンドでPOST送信
-        if (state.gasApiUrl) {
-          updateSyncStatusUI('syncing');
-          await fetch(state.gasApiUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'syncAll',
-              events: state.events,
-              taskRules: state.taskRules,
-            }),
-          });
-          updateSyncStatusUI('connected');
-        }
-      } catch (err) {
-        console.error('保存エラー:', err);
-        updateSyncStatusUI('error');
-      }
-    }
-
-    function updateSyncStatusUI(statusOverride) {
-      const dot = document.getElementById('syncStatusDot');
-      const text = document.getElementById('syncStatusText');
-      if (!state.gasApiUrl) {
-        dot.className = 'w-2 h-2 rounded-full bg-emerald-500 inline-block';
-        text.textContent = 'ローカル保存モード (GitHub Pages対応)';
-        return;
-      }
-      if (statusOverride === 'syncing') {
-        dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse inline-block';
-        text.textContent = 'GASスプレッドシートと同期中...';
-      } else if (statusOverride === 'error') {
-        dot.className = 'w-2 h-2 rounded-full bg-rose-500 inline-block';
-        text.textContent = 'GAS同期エラー（ローカルに保存済）';
-      } else {
-        dot.className = 'w-2 h-2 rounded-full bg-discord-blurple inline-block';
-        text.textContent = 'GAS API 連携有効';
-      }
-    }
-
-    /**
-     * 予定オブジェクトに対して、実際にDiscordへ通知される日時リストを計算して返す
-     */
-    function calculateNotificationSchedules(eventObj) {
-      const targetDateObj = parseDateISO(eventObj.date);
-      const targetWeekday = targetDateObj.getDay(); // 0(日)〜6(土)
-
-      // 1. 「通常予定」の場合
-      if (eventObj.taskTypeId === 'normal') {
-        switch (eventObj.normalNotify) {
-          case 'none':
-            return [];
-          case '1h_before':
-            if (eventObj.isAllDay || !eventObj.time) {
-              return [{ label: `${formatShortDateJP(eventObj.date)} 08:00 (終日予定の朝)`, reason: '通常予定' }];
-            }
-            const [hh, mm] = eventObj.time.split(':').map(Number);
-            const prevH = String(Math.max(0, hh - 1)).padStart(2, '0');
-            return [{ label: `${formatShortDateJP(eventObj.date)} ${prevH}:${String(mm).padStart(2, '0')} (1時間前)`, reason: '通常予定' }];
-          case 'same_day_9':
-            return [{ label: `${formatShortDateJP(eventObj.date)} 09:00 (当日朝)`, reason: '通常予定' }];
-          case '1d_before_20':
-            return [{ label: `${formatShortDateJP(addDaysToISO(eventObj.date, -1))} 20:00 (1日前)`, reason: '通常予定' }];
-          case '3d_before_20':
-            return [{ label: `${formatShortDateJP(addDaysToISO(eventObj.date, -3))} 20:00 (3日前)`, reason: '通常予定' }];
-          default:
-            return [];
-        }
-      }
-
-      // 2. カスタムタスク（小テスト・提出物など）の場合
-      const taskDef = state.taskRules.find(t => t.id === eventObj.taskTypeId);
-      if (!taskDef) return [];
-
-      const matchedSchedules = [];
-      taskDef.rules.forEach(rule => {
-        const isAllDays = rule.targetWeekday === 'all';
-        const isMatchedWeekday = Number(rule.targetWeekday) === targetWeekday;
-        if (isAllDays || isMatchedWeekday) {
-          const notifyDateStr = addDaysToISO(eventObj.date, -Number(rule.daysBefore));
-          const condText = isAllDays ? `${rule.daysBefore}日前` : `${WEEKDAY_LABELS[targetWeekday]}曜限定・${rule.daysBefore}日前`;
-          matchedSchedules.push({
-            label: `${formatShortDateJP(notifyDateStr)} ${rule.time} (${condText})`,
-            reason: taskDef.name
-          });
-        }
-      });
-
-      return matchedSchedules;
-    }
-
-    function getTaskTypeName(taskTypeId) {
-      if (taskTypeId === 'normal') return '通常予定';
-      const found = state.taskRules.find(t => t.id === taskTypeId);
-      return found ? found.name : '通常予定';
-    }
-
-    // 現在ログイン中のユーザーに表示すべき予定か判定（全体予定 or 自分の個人予定）
-    function isEventVisibleToCurrentUser(eventObj) {
-      if (eventObj.visibility === 'shared') return true;
-      return eventObj.creatorId === state.currentUserId;
-    }
-
-    // =========================================================================
-    // 4. カレンダー描画ロジック（日曜日始まり）
-    // =========================================================================
-    function renderCalendar() {
-      const titleEl = document.getElementById('calendarMonthTitle');
-      titleEl.textContent = `${state.viewYear}年 ${state.viewMonth + 1}月`;
-
-      const gridEl = document.getElementById('calendarGrid');
-      gridEl.innerHTML = '';
-
-      const firstDayOfMonth = new Date(state.viewYear, state.viewMonth, 1);
-      const startWeekday = firstDayOfMonth.getDay(); // 0: 日曜始まり
-      const daysInMonth = new Date(state.viewYear, state.viewMonth + 1, 0).getDate();
-      const prevMonthDays = new Date(state.viewYear, state.viewMonth, 0).getDate();
-
-      // カレンダーは35マスまたは42マスで表示
-      const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
-      const visibleEvents = state.events.filter(isEventVisibleToCurrentUser);
-
-      // 日付ごとの予定マップを作成
-      const eventsByDate = {};
-      visibleEvents.forEach(ev => {
-        if (!eventsByDate[ev.date]) eventsByDate[ev.date] = [];
-        eventsByDate[ev.date].push(ev);
-      });
-
-      const todayISO = '2026-11-13'; // 現在日基準
-
-      for (let i = 0; i < totalCells; i++) {
-        let cellYear = state.viewYear;
-        let cellMonth = state.viewMonth;
-        let dayNumber = 1;
-        let isCurrentMonth = true;
-
-        if (i < startWeekday) {
-          // 前月分
-          isCurrentMonth = false;
-          dayNumber = prevMonthDays - (startWeekday - 1 - i);
-          cellMonth = state.viewMonth - 1;
-          if (cellMonth < 0) {
-            cellMonth = 11;
-            cellYear--;
-          }
-        } else if (i >= startWeekday + daysInMonth) {
-          // 翌月分
-          isCurrentMonth = false;
-          dayNumber = i - (startWeekday + daysInMonth) + 1;
-          cellMonth = state.viewMonth + 1;
-          if (cellMonth > 11) {
-            cellMonth = 0;
-            cellYear++;
-          }
-        } else {
-          dayNumber = i - startWeekday + 1;
-        }
-
-        const cellDateISO = formatDateISO(cellYear, cellMonth, dayNumber);
-        const dayEvents = (eventsByDate[cellDateISO] || []).sort((a, b) => {
-          if (a.isAllDay && !b.isAllDay) return -1;
-          if (!a.isAllDay && b.isAllDay) return 1;
-          return (a.time || '').localeCompare(b.time || '');
-        });
-
-        const isSelectedSingle = !state.isMultiSelectMode && state.selectedDate === cellDateISO;
-        const isSelectedMulti = state.isMultiSelectMode && state.multiSelectedDates.has(cellDateISO);
-        const isToday = cellDateISO === todayISO;
-        const weekdayIdx = i % 7;
-
-        const cellBtn = document.createElement('button');
-        cellBtn.type = 'button';
-        cellBtn.dataset.date = cellDateISO;
-
-        let cellBg = isCurrentMonth ? 'bg-white hover:bg-slate-50/90' : 'bg-slate-50/60 text-slate-400 hover:bg-slate-100/70';
-        if (isSelectedSingle) {
-          cellBg = 'bg-indigo-50/80 ring-2 ring-inset ring-discord-blurple';
-        } else if (isSelectedMulti) {
-          cellBg = 'bg-indigo-100/80 ring-2 ring-inset ring-discord-blurple';
-        }
-
-        cellBtn.className = `min-h-[84px] sm:min-h-[106px] p-1 sm:p-1.5 flex flex-col items-stretch text-left transition relative focus:outline-none ${cellBg}`;
-
-        // 日付数字の色
-        let numColor = !isCurrentMonth
-          ? 'text-slate-400'
-          : weekdayIdx === 0
-            ? 'text-rose-500'
-            : weekdayIdx === 6
-              ? 'text-blue-600'
-              : 'text-slate-700';
-
-        const dayBadgeHtml = isToday
-          ? `<span class="w-6 h-6 rounded-full bg-discord-blurple text-white font-bold text-xs flex items-center justify-center">${dayNumber}</span>`
-          : `<span class="text-xs font-bold px-1 ${numColor}">${dayNumber}</span>`;
-
-        const multiCheckHtml = isSelectedMulti
-          ? `<span class="w-4 h-4 rounded-full bg-discord-blurple text-white flex items-center justify-center"><i data-lucide="check" class="w-3 h-3"></i></span>`
-          : '';
-
-        // セル内の予定ピル（最大3件表示＋超過バッジ）
-        const maxDisplay = 3;
-        const pillsHtml = dayEvents.slice(0, maxDisplay).map(ev => {
-          const isShared = ev.visibility === 'shared';
-          const isTentative = ev.status === 'tentative';
-
-          let pillStyle = '';
-          if (isTentative) {
-            // 期限未確定：点線ボーダーで明確に区別
-            pillStyle = isShared
-              ? 'bg-emerald-50 text-emerald-900 border border-dashed border-emerald-500'
-              : 'bg-indigo-50 text-indigo-900 border border-dashed border-discord-blurple';
-          } else {
-            // 確定予定
-            pillStyle = isShared
-              ? 'bg-discord-green text-white'
-              : 'bg-discord-blurple text-white';
-          }
-
-          const prefix = isTentative ? '？' : '';
-          return `
-            <div class="px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-medium truncate leading-tight ${pillStyle}">
-              ${prefix}${escapeHtml(ev.title)}
-            </div>
-          `;
-        }).join('');
-
-        const moreHtml = dayEvents.length > maxDisplay
-          ? `<div class="text-[10px] font-bold text-slate-400 px-1">+他 ${dayEvents.length - maxDisplay}件</div>`
-          : '';
-
-        cellBtn.innerHTML = `
-          <div class="flex items-center justify-between mb-1">
-            ${dayBadgeHtml}
-            ${multiCheckHtml}
-          </div>
-          <div class="space-y-1 overflow-hidden flex-1">
-            ${pillsHtml}
-            ${moreHtml}
-          </div>
-        `;
-
-        cellBtn.addEventListener('click', () => handleDateCellClick(cellDateISO));
-        gridEl.appendChild(cellBtn);
-      }
-
-      lucide.createIcons();
-    }
-
-    // 日付セルタップ時の挙動
-    function handleDateCellClick(dateISO) {
-      if (state.isMultiSelectMode) {
-        if (state.multiSelectedDates.has(dateISO)) {
-          state.multiSelectedDates.delete(dateISO);
-        } else {
-          state.multiSelectedDates.add(dateISO);
-        }
-        updateMultiSelectUI();
-        renderCalendar();
-      } else {
-        state.selectedDate = dateISO;
-        // 別の月の日付をタップした場合は表示月も合わせる
-        const dt = parseDateISO(dateISO);
-        state.viewYear = dt.getFullYear();
-        state.viewMonth = dt.getMonth();
-        renderCalendar();
-        renderSelectedDateEvents();
-      }
-    }
-
-    // =========================================================================
-    // 5. 選択日の予定一覧パネル描画
-    // =========================================================================
-    function renderSelectedDateEvents() {
-      const headingEl = document.getElementById('selectedDateHeading');
-      headingEl.textContent = formatDisplayDateJP(state.selectedDate);
-
-      const listEl = document.getElementById('selectedDateEventList');
-      const dayEvents = state.events
-        .filter(ev => ev.date === state.selectedDate && isEventVisibleToCurrentUser(ev))
-        .sort((a, b) => {
-          if (a.isAllDay && !b.isAllDay) return -1;
-          if (!a.isAllDay && b.isAllDay) return 1;
-          return (a.time || '').localeCompare(b.time || '');
-        });
-
-      if (dayEvents.length === 0) {
-        listEl.innerHTML = `
-          <div class="py-10 px-4 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-            <div class="w-11 h-11 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2.5">
-              <i data-lucide="calendar-off" class="w-5 h-5"></i>
-            </div>
-            <p class="text-sm font-semibold text-slate-600">この日の予定はありません</p>
-            <p class="text-xs text-slate-400 mt-1">右上の「＋ この日に追加」から予定を登録できます</p>
-          </div>
-        `;
-        lucide.createIcons();
-        return;
-      }
-
-      listEl.innerHTML = dayEvents.map(ev => {
-        const isShared = ev.visibility === 'shared';
-        const isTentative = ev.status === 'tentative';
-        const taskName = getTaskTypeName(ev.taskTypeId);
-        const schedules = calculateNotificationSchedules(ev);
-
-        const cardBorder = isTentative
-          ? 'border-dashed border-amber-400 bg-amber-50/30 hover:bg-amber-50/60'
-          : isShared
-            ? 'border-slate-200 hover:border-discord-green/60 bg-white'
-            : 'border-slate-200 hover:border-discord-blurple/60 bg-white';
-
-        const visibilityBadge = isShared
-          ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 text-emerald-800">全体予定</span>`
-          : `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-indigo-100 text-indigo-800">個人予定</span>`;
-
-        const tentativeBadge = isTentative
-          ? `<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300">？期限未確定</span>`
-          : '';
-
-        const timeDisplay = ev.isAllDay ? '終日' : (ev.time || '時間未設定');
-
-        const scopeHtml = ev.scope
-          ? `<div class="mt-2 px-2.5 py-1.5 rounded-lg bg-slate-100/90 text-xs text-slate-700 flex items-start gap-1.5">
-               <i data-lucide="book-open" class="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5"></i>
-               <span><strong>範囲：</strong>${escapeHtml(ev.scope)}</span>
-             </div>`
-          : '';
-
-        const notifySummary = schedules.length > 0
-          ? schedules.map(s => s.label).join(' / ')
-          : '通知なし';
-
-        return `
-          <div
-            data-event-id="${ev.id}"
-            class="event-card cursor-pointer rounded-2xl border ${cardBorder} p-3.5 shadow-2xs transition group"
-          >
-            <div class="flex items-start justify-between gap-2">
-              <div class="flex flex-wrap items-center gap-1.5">
-                ${visibilityBadge}
-                ${tentativeBadge}
-                <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-600">
-                  ${escapeHtml(taskName)}
-                </span>
-              </div>
-              <span class="text-xs font-bold text-slate-500 shrink-0 flex items-center gap-1">
-                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                ${escapeHtml(timeDisplay)}
-              </span>
-            </div>
-
-            <h4 class="mt-2 text-sm sm:text-base font-bold text-slate-900 group-hover:text-discord-blurple transition">
-              ${isTentative ? '【期限未確定】' : ''}${escapeHtml(ev.title)}
-            </h4>
-
-            ${scopeHtml}
-
-            <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center gap-1.5 text-[11px] text-slate-500">
-              <i data-lucide="bell" class="w-3.5 h-3.5 text-discord-blurple shrink-0"></i>
-              <span class="truncate">${escapeHtml(notifySummary)}</span>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      // カードクリックで詳細モーダルを開く
-      listEl.querySelectorAll('.event-card').forEach(card => {
-        card.addEventListener('click', () => {
-          openEventDetailModal(card.dataset.eventId);
-        });
-      });
-
-      lucide.createIcons();
-    }
-
-    // =========================================================================
-    // 6. 予定の登録・編集モーダルロジック
-    // =========================================================================
-    function populateTaskTypeDropdown(selectedTaskTypeId = 'normal') {
-      const selectEl = document.getElementById('formTaskType');
-      selectEl.innerHTML = `<option value="normal">通常予定（通知タイミングを個別選択）</option>`;
-      state.taskRules.forEach(task => {
-        const opt = document.createElement('option');
-        opt.value = task.id;
-        opt.textContent = `${task.name}（自動通知ルール適用）`;
-        selectEl.appendChild(opt);
-      });
-      selectEl.value = selectedTaskTypeId;
-      updateFormTaskRulePreview();
-    }
-
-    function updateFormTaskRulePreview() {
-      const taskTypeId = document.getElementById('formTaskType').value;
-      const normalWrapper = document.getElementById('normalNotifyWrapper');
-      const autoWrapper = document.getElementById('autoRulePreviewWrapper');
-      const autoListEl = document.getElementById('autoRulePreviewList');
-
-      if (taskTypeId === 'normal') {
-        normalWrapper.classList.remove('hidden');
-        autoWrapper.classList.add('hidden');
-        return;
-      }
-
-      normalWrapper.classList.add('hidden');
-      autoWrapper.classList.remove('hidden');
-
-      const taskDef = state.taskRules.find(t => t.id === taskTypeId);
-      if (!taskDef || taskDef.rules.length === 0) {
-        autoListEl.innerHTML = `<p class="text-slate-400">このタスクには通知ルールが設定されていません。</p>`;
-        return;
-      }
-
-      // 単日選択中なら対象日の曜日に合致するかチェックして表示
-      const targetDates = state.isMultiSelectMode && state.multiSelectedDates.size > 0
-        ? Array.from(state.multiSelectedDates).sort()
-        : [document.getElementById('formDate').value || state.selectedDate];
-
-      const sampleDateStr = targetDates[0];
-      const sampleWeekday = parseDateISO(sampleDateStr).getDay();
-
-      autoListEl.innerHTML = taskDef.rules.map(rule => {
-        const isAll = rule.targetWeekday === 'all';
-        const isMatch = isAll || Number(rule.targetWeekday) === sampleWeekday;
-        const condText = isAll ? 'すべての曜日' : `${WEEKDAY_FULL_LABELS[rule.targetWeekday]}の場合のみ`;
-        const notifyDateStr = addDaysToISO(sampleDateStr, -Number(rule.daysBefore));
-
-        if (isMatch) {
-          return `
-            <div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-900">
-              <span class="font-semibold">✓ ${rule.daysBefore}日前 ${rule.time} <span class="text-[11px] font-normal text-indigo-600">(${condText})</span></span>
-              <span class="text-[11px] font-bold text-discord-blurple">${targetDates.length === 1 ? formatShortDateJP(notifyDateStr) + ' 送信' : '適用対象'}</span>
-            </div>
-          `;
-        } else {
-          return `
-            <div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-400">
-              <span>- ${rule.daysBefore}日前 ${rule.time} (${condText})</span>
-              <span class="text-[10px]">対象外</span>
-            </div>
-          `;
-        }
-      }).join('');
-    }
-
-    function openAddEventModal({ isBulk = false } = {}) {
-      document.getElementById('formEventId').value = '';
-      document.getElementById('eventFormModalTitle').textContent = isBulk ? '複数日に予定を一括追加' : '予定を追加';
-      document.getElementById('btnSubmitEventForm').textContent = isBulk ? `${state.multiSelectedDates.size}日分に一括登録` : '登録する';
-
-      const singleWrapper = document.getElementById('singleDateInputWrapper');
-      const multiWrapper = document.getElementById('multiDateBadgesWrapper');
-
-      if (isBulk) {
-        singleWrapper.classList.add('hidden');
-        multiWrapper.classList.remove('hidden');
-        const sortedDates = Array.from(state.multiSelectedDates).sort();
-        document.getElementById('multiDateBadgesList').innerHTML = sortedDates.map(d =>
-          `<span class="px-2.5 py-1 rounded-lg bg-white border border-indigo-200 text-indigo-900 text-xs font-bold">${formatShortDateJP(d)}</span>`
-        ).join('');
-      } else {
-        singleWrapper.classList.remove('hidden');
-        multiWrapper.classList.add('hidden');
-        document.getElementById('formDate').value = state.selectedDate;
-      }
-
-      // フォーム初期値リセット
-      document.querySelector('input[name="formStatus"][value="confirmed"]').checked = true;
-      document.querySelector('input[name="formVisibility"][value="personal"]').checked = true;
-      document.getElementById('tentativeHintBox').classList.add('hidden');
-
-      populateTaskTypeDropdown('normal');
-      document.getElementById('formNormalNotify').value = '1d_before_20';
-      document.getElementById('formTitle').value = '';
-      document.getElementById('formScope').value = '';
-      document.getElementById('formIsAllDay').checked = false;
-      document.getElementById('formTime').disabled = false;
-      document.getElementById('formTime').value = '17:00';
-      document.getElementById('formMemo').value = '';
-
-      openModal('eventFormModal');
-      setTimeout(() => document.getElementById('formTitle').focus(), 100);
-    }
-
-    function openEditEventModal(eventId) {
-      const ev = state.events.find(e => e.id === eventId);
-      if (!ev) return;
-
-      closeModal('eventDetailModal');
-
-      document.getElementById('formEventId').value = ev.id;
-      document.getElementById('eventFormModalTitle').textContent = '予定を編集';
-      document.getElementById('btnSubmitEventForm').textContent = '変更を保存';
-
-      document.getElementById('singleDateInputWrapper').classList.remove('hidden');
-      document.getElementById('multiDateBadgesWrapper').classList.add('hidden');
-      document.getElementById('formDate').value = ev.date;
-
-      document.querySelector(`input[name="formStatus"][value="${ev.status}"]`).checked = true;
-      document.querySelector(`input[name="formVisibility"][value="${ev.visibility}"]`).checked = true;
-      document.getElementById('tentativeHintBox').classList.toggle('hidden', ev.status !== 'tentative');
-
-      populateTaskTypeDropdown(ev.taskTypeId);
-      document.getElementById('formNormalNotify').value = ev.normalNotify || '1d_before_20';
-      document.getElementById('formTitle').value = ev.title;
-      document.getElementById('formScope').value = ev.scope || '';
-      document.getElementById('formIsAllDay').checked = Boolean(ev.isAllDay);
-      document.getElementById('formTime').disabled = Boolean(ev.isAllDay);
-      document.getElementById('formTime').value = ev.time || '17:00';
-      document.getElementById('formMemo').value = ev.memo || '';
-
-      openModal('eventFormModal');
-    }
-
-    function handleEventFormSubmit(e) {
-      e.preventDefault();
-
-      const editId = document.getElementById('formEventId').value;
-      const status = document.querySelector('input[name="formStatus"]:checked').value;
-      const visibility = document.querySelector('input[name="formVisibility"]:checked').value;
-      const taskTypeId = document.getElementById('formTaskType').value;
-      const normalNotify = document.getElementById('formNormalNotify').value;
-      const title = document.getElementById('formTitle').value.trim();
-      const scope = document.getElementById('formScope').value.trim();
-      const isAllDay = document.getElementById('formIsAllDay').checked;
-      const time = isAllDay ? '' : document.getElementById('formTime').value;
-      const memo = document.getElementById('formMemo').value.trim();
-
-      if (!title) {
-        showToast('予定名を入力してください', 'error');
-        return;
-      }
-
-      if (editId) {
-        // 既存予定の更新
-        const idx = state.events.findIndex(ev => ev.id === editId);
-        if (idx !== -1) {
-          const newDate = document.getElementById('formDate').value;
-          state.events[idx] = {
-            ...state.events[idx],
-            date: newDate,
-            status,
-            visibility,
-            taskTypeId,
-            normalNotify,
-            title,
-            scope,
-            isAllDay,
-            time,
-            memo,
-          };
-          state.selectedDate = newDate;
-        }
-        showToast('予定を更新しました');
-      } else {
-        // 新規登録（単日または複数日一括）
-        const isBulk = !document.getElementById('multiDateBadgesWrapper').classList.contains('hidden');
-        const targetDates = isBulk
-          ? Array.from(state.multiSelectedDates).sort()
-          : [document.getElementById('formDate').value];
-
-        targetDates.forEach(dateStr => {
-          state.events.push({
-            id: generateId('evt'),
-            creatorId: state.currentUserId,
-            title,
-            date: dateStr,
-            time,
-            isAllDay,
-            visibility,
-            status,
-            taskTypeId,
-            normalNotify,
-            scope,
-            memo,
-          });
-        });
-
-        if (isBulk) {
-          showToast(`${targetDates.length}日分の予定を一括登録しました！`);
-          state.multiSelectedDates.clear();
-          state.isMultiSelectMode = false;
-          updateMultiSelectUI();
-        } else {
-          state.selectedDate = targetDates[0];
-          showToast('予定を登録しました');
-        }
-      }
-
-      persistData();
-      closeModal('eventFormModal');
-      renderCalendar();
-      renderSelectedDateEvents();
-    }
-
-    // =========================================================================
-    // 7. 予定詳細モーダル ＆ Discordプレビュー描画
-    // =========================================================================
-    function openEventDetailModal(eventId) {
-      const ev = state.events.find(e => e.id === eventId);
-      if (!ev) return;
-
-      state.activeDetailEventId = ev.id;
-      const isShared = ev.visibility === 'shared';
-      const isTentative = ev.status === 'tentative';
-      const taskName = getTaskTypeName(ev.taskTypeId);
-      const schedules = calculateNotificationSchedules(ev);
-
-      // バッジ類
-      document.getElementById('detailBadges').innerHTML = `
-        <span class="px-2.5 py-1 rounded-lg text-xs font-bold ${isShared ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'}">
-          ${isShared ? '全体予定（サーバー共有）' : '個人予定（自分専用）'}
-        </span>
-        ${isTentative ? '<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">？期限未確定</span>' : ''}
-      `;
-
-      document.getElementById('detailTitle').textContent = ev.title;
-      document.getElementById('detailDateTime').textContent = `${formatDisplayDateJP(ev.date)} ${ev.isAllDay ? '終日' : ev.time}`;
-      document.getElementById('detailTaskType').textContent = taskName;
-
-      // 範囲
-      const scopeBox = document.getElementById('detailScopeBox');
-      if (ev.scope) {
-        scopeBox.classList.remove('hidden');
-        document.getElementById('detailScopeText').textContent = ev.scope;
-      } else {
-        scopeBox.classList.add('hidden');
-      }
-
-      // メモ
-      const memoBox = document.getElementById('detailMemoBox');
-      if (ev.memo) {
-        memoBox.classList.remove('hidden');
-        memoBox.textContent = ev.memo;
-      } else {
-        memoBox.classList.add('hidden');
-      }
-
-      // Discord Bot通知プレビュー組み立て
-      document.getElementById('detailDiscordTarget').textContent = isShared
-        ? '送信先: #全体予定チャンネル'
-        : '送信先: 個人DM';
-
-      const embedEl = document.getElementById('detailDiscordEmbed');
-      embedEl.className = `border-l-4 ${isTentative ? 'border-amber-400' : isShared ? 'border-discord-green' : 'border-discord-blurple'} bg-[#1E1F22] rounded-r-lg p-3 space-y-1.5`;
-
-      const prefixLabel = isTentative ? '【期限未確定】' : '';
-      document.getElementById('detailDiscordEmbedTitle').textContent = `${prefixLabel}${ev.title}（${taskName}）`;
-
-      const lines = [
-        `📅 日時：${formatDisplayDateJP(ev.date)}${isTentative ? '頃' : ''} ${ev.isAllDay ? '終日' : ev.time}`,
-      ];
-      if (ev.scope) lines.push(`📚 範囲：${ev.scope}`);
-      if (ev.memo) lines.push(`📝 メモ：${ev.memo}`);
-      document.getElementById('detailDiscordEmbedBody').textContent = lines.join('\n');
-
-      document.getElementById('detailNotifyScheduleText').textContent =
-        schedules.length > 0 ? schedules.map(s => s.label).join('、') : '通知設定なし';
-
-      openModal('eventDetailModal');
-      lucide.createIcons();
-    }
-
-    // =========================================================================
-    // 8. ルール設定モーダル描画・編集ロジック
-    // =========================================================================
-    function renderTaskRulesSettings() {
-      const container = document.getElementById('taskRulesContainer');
-
-      if (state.taskRules.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">カスタムタスクがありません。上のフォームから追加してください。</p>`;
-        return;
-      }
-
-      container.innerHTML = state.taskRules.map(task => {
-        const rulesHtml = task.rules.map(rule => `
-          <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold">
-                ${rule.daysBefore}日前 ${rule.time}
-              </span>
-              <span class="text-slate-600 font-medium">
-                条件：${rule.targetWeekday === 'all' ? 'すべての曜日' : `${WEEKDAY_FULL_LABELS[rule.targetWeekday]}の場合のみ`}
-              </span>
-            </div>
-            <button
-              type="button"
-              class="btn-remove-rule text-slate-400 hover:text-rose-600 p-1 rounded-lg transition"
-              data-task-id="${task.id}"
-              data-rule-id="${rule.id}"
-              title="この通知ルールを削除"
-            >
-              <i data-lucide="x" class="w-4 h-4"></i>
-            </button>
-          </div>
-        `).join('');
-
-        return `
-          <div class="rounded-2xl border border-slate-200 p-4 space-y-3 bg-white shadow-2xs">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-discord-blurple"></span>
-                <h5 class="text-sm font-bold text-slate-800">${escapeHtml(task.name)}</h5>
-              </div>
-              <button
-                type="button"
-                class="btn-delete-task text-xs text-rose-500 hover:text-rose-700 font-semibold"
-                data-task-id="${task.id}"
-              >
-                タスク削除
-              </button>
-            </div>
-
-            <div class="space-y-1.5">
-              ${rulesHtml || '<p class="text-xs text-slate-400">通知ルール未設定</p>'}
-            </div>
-
-            <!-- ルール追加インラインフォーム -->
-            <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs">
-              <input
-                type="number"
-                min="0"
-                max="30"
-                value="1"
-                id="ruleDays_${task.id}"
-                class="w-16 px-2.5 py-1.5 rounded-lg border border-slate-300 text-center font-bold"
-              />
-              <span class="text-slate-600 font-medium">日前の</span>
-              <input
-                type="time"
-                value="20:00"
-                id="ruleTime_${task.id}"
-                class="px-2.5 py-1.5 rounded-lg border border-slate-300 font-medium"
-              />
-              <span class="text-slate-600 font-medium">に通知 /</span>
-              <select id="ruleWeekday_${task.id}" class="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white">
-                <option value="all">すべての曜日</option>
-                <option value="1">月曜日の場合</option>
-                <option value="2">火曜日の場合</option>
-                <option value="3">水曜日の場合</option>
-                <option value="4">木曜日の場合</option>
-                <option value="5">金曜日の場合</option>
-                <option value="6">土曜日の場合</option>
-                <option value="0">日曜日の場合</option>
-              </select>
-              <button
-                type="button"
-                class="btn-add-rule ml-auto px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold transition"
-                data-task-id="${task.id}"
-              >
-                ＋ ルール追加
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      // イベントリスナー登録
-      container.querySelectorAll('.btn-add-rule').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const taskId = btn.dataset.taskId;
-          const daysBefore = Number(document.getElementById(`ruleDays_${taskId}`).value);
-          const time = document.getElementById(`ruleTime_${taskId}`).value || '20:00';
-          const targetWeekday = document.getElementById(`ruleWeekday_${taskId}`).value;
-
-          const task = state.taskRules.find(t => t.id === taskId);
-          if (task) {
-            task.rules.push({
-              id: generateId('rule'),
-              daysBefore,
-              time,
-              targetWeekday: targetWeekday === 'all' ? 'all' : Number(targetWeekday),
-            });
-            persistData();
-            renderTaskRulesSettings();
-            renderSelectedDateEvents();
-            showToast('通知ルールを追加しました');
-          }
-        });
-      });
-
-      container.querySelectorAll('.btn-remove-rule').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const { taskId, ruleId } = btn.dataset;
-          const task = state.taskRules.find(t => t.id === taskId);
-          if (task) {
-            task.rules = task.rules.filter(r => r.id !== ruleId);
-            persistData();
-            renderTaskRulesSettings();
-            renderSelectedDateEvents();
-            showToast('通知ルールを削除しました', 'info');
-          }
-        });
-      });
-
-      container.querySelectorAll('.btn-delete-task').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const taskId = btn.dataset.taskId;
-          state.taskRules = state.taskRules.filter(t => t.id !== taskId);
-          persistData();
-          renderTaskRulesSettings();
-          renderSelectedDateEvents();
-          showToast('タスク種類を削除しました', 'info');
-        });
-      });
-
-      lucide.createIcons();
-    }
-
-    // =========================================================================
-    // 9. モーダル開閉 & 複数選択モードUI制御
-    // =========================================================================
-    function openModal(modalId) {
-      const el = document.getElementById(modalId);
-      el.classList.remove('hidden');
-      el.classList.add('flex');
-    }
-
-    function closeModal(modalId) {
-      const el = document.getElementById(modalId);
-      el.classList.add('hidden');
-      el.classList.remove('flex');
-    }
-
-    function updateMultiSelectUI() {
-      const toggleBtn = document.getElementById('btnToggleMultiSelect');
-      const banner = document.getElementById('multiSelectBanner');
-      const floatingBar = document.getElementById('multiSelectFloatingBar');
-      const countBadge = document.getElementById('multiSelectCountBadge');
-      const bulkAddBtn = document.getElementById('btnBulkAddEvent');
-
-      if (state.isMultiSelectMode) {
-        toggleBtn.classList.remove('bg-white', 'text-slate-700', 'border-slate-200');
-        toggleBtn.classList.add('bg-discord-blurple', 'text-white', 'border-discord-blurple');
-        banner.classList.remove('hidden');
-        floatingBar.classList.remove('hidden');
-        floatingBar.classList.add('flex');
-
-        const count = state.multiSelectedDates.size;
-        countBadge.textContent = `${count}日選択中`;
-        bulkAddBtn.disabled = count === 0;
-        bulkAddBtn.textContent = count > 0 ? `選択した${count}日間に一括追加` : '一括追加する';
-      } else {
-        toggleBtn.classList.add('bg-white', 'text-slate-700', 'border-slate-200');
-        toggleBtn.classList.remove('bg-discord-blurple', 'text-white', 'border-discord-blurple');
-        banner.classList.add('hidden');
-        floatingBar.classList.add('hidden');
-        floatingBar.classList.remove('flex');
-      }
-    }
-
-    // =========================================================================
-    // 10. イベントリスナー初期化
-    // =========================================================================
-    function initEventListeners() {
-      // 月移動
-      document.getElementById('btnPrevMonth').addEventListener('click', () => {
-        state.viewMonth--;
-        if (state.viewMonth < 0) {
-          state.viewMonth = 11;
-          state.viewYear--;
-        }
-        renderCalendar();
-      });
-
-      document.getElementById('btnNextMonth').addEventListener('click', () => {
-        state.viewMonth++;
-        if (state.viewMonth > 11) {
-          state.viewMonth = 0;
-          state.viewYear++;
-        }
-        renderCalendar();
-      });
-
-      document.getElementById('btnToday').addEventListener('click', () => {
-        state.viewYear = 2026;
-        state.viewMonth = 10;
-        state.selectedDate = '2026-11-13';
-        renderCalendar();
-        renderSelectedDateEvents();
-      });
-
-      // ユーザー切替（Discordアカウント切替シミュレーション）
-      document.getElementById('userSwitcher').addEventListener('change', (e) => {
-        state.currentUserId = e.target.value;
-        const avatarEl = document.getElementById('currentUserAvatar');
-        if (state.currentUserId === 'user_a') {
-          avatarEl.textContent = 'A';
-          avatarEl.className = 'w-6 h-6 rounded-full bg-discord-blurple text-white flex items-center justify-center text-xs font-bold ml-1 shrink-0';
-        } else {
-          avatarEl.textContent = 'B';
-          avatarEl.className = 'w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold ml-1 shrink-0';
-        }
-        renderCalendar();
-        renderSelectedDateEvents();
-        showToast(`${e.target.options[e.target.selectedIndex].text} に切り替えました`, 'info');
-      });
-
-      // 複数選択モード切替
-      document.getElementById('btnToggleMultiSelect').addEventListener('click', () => {
-        state.isMultiSelectMode = !state.isMultiSelectMode;
-        if (!state.isMultiSelectMode) {
-          state.multiSelectedDates.clear();
-        }
-        updateMultiSelectUI();
-        renderCalendar();
-      });
-
-      document.getElementById('btnExitMultiSelectTop').addEventListener('click', () => {
-        state.isMultiSelectMode = false;
-        state.multiSelectedDates.clear();
-        updateMultiSelectUI();
-        renderCalendar();
-      });
-
-      document.getElementById('btnClearMultiSelect').addEventListener('click', () => {
-        state.multiSelectedDates.clear();
-        updateMultiSelectUI();
-        renderCalendar();
-      });
-
-      document.getElementById('btnBulkAddEvent').addEventListener('click', () => {
-        if (state.multiSelectedDates.size === 0) return;
-        openAddEventModal({ isBulk: true });
-      });
-
-      // 単日予定追加ボタン
-      document.getElementById('btnOpenAddModal').addEventListener('click', () => {
-        openAddEventModal({ isBulk: false });
-      });
-
-      // 予定フォーム内の動的連動
-      document.querySelectorAll('input[name="formStatus"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-          document.getElementById('tentativeHintBox').classList.toggle('hidden', e.target.value !== 'tentative');
-        });
-      });
-
-      document.getElementById('formTaskType').addEventListener('change', updateFormTaskRulePreview);
-      document.getElementById('formDate').addEventListener('change', updateFormTaskRulePreview);
-
-      document.getElementById('formIsAllDay').addEventListener('change', (e) => {
-        document.getElementById('formTime').disabled = e.target.checked;
-      });
-
-      document.getElementById('eventForm').addEventListener('submit', handleEventFormSubmit);
-
-      // 詳細モーダルからの編集・削除
-      document.getElementById('btnEditEventTrigger').addEventListener('click', () => {
-        if (state.activeDetailEventId) {
-          openEditEventModal(state.activeDetailEventId);
-        }
-      });
-
-      document.getElementById('btnDeleteEventTrigger').addEventListener('click', () => {
-        if (!state.activeDetailEventId) return;
-        const ev = state.events.find(e => e.id === state.activeDetailEventId);
-        state.pendingDeleteEventId = state.activeDetailEventId;
-        document.getElementById('confirmDeleteText').textContent = `「${ev ? ev.title : ''}」を削除します。この操作は取り消せません。`;
-        openModal('confirmDeleteModal');
-      });
-
-      document.getElementById('btnConfirmDeleteExecute').addEventListener('click', () => {
-        if (state.pendingDeleteEventId) {
-          state.events = state.events.filter(e => e.id !== state.pendingDeleteEventId);
-          persistData();
-          closeModal('confirmDeleteModal');
-          closeModal('eventDetailModal');
-          renderCalendar();
-          renderSelectedDateEvents();
-          showToast('予定を削除しました', 'info');
-          state.pendingDeleteEventId = null;
-        }
-      });
-
-      // 設定モーダル
-      document.getElementById('btnOpenSettings').addEventListener('click', () => {
-        document.getElementById('inputGasUrl').value = state.gasApiUrl;
-        renderTaskRulesSettings();
-        openModal('settingsModal');
-      });
-
-      // 設定モーダルのタブ切替
-      document.querySelectorAll('.settings-tab').forEach(tabBtn => {
-        tabBtn.addEventListener('click', () => {
-          document.querySelectorAll('.settings-tab').forEach(b => {
-            b.classList.remove('border-discord-blurple', 'text-discord-blurple');
-            b.classList.add('border-transparent', 'text-slate-500');
-          });
-          tabBtn.classList.add('border-discord-blurple', 'text-discord-blurple');
-          tabBtn.classList.remove('border-transparent', 'text-slate-500');
-
-          const targetTab = tabBtn.dataset.tab;
-          document.getElementById('tabRules').classList.toggle('hidden', targetTab !== 'tabRules');
-          document.getElementById('tabGas').classList.toggle('hidden', targetTab !== 'tabGas');
-        });
-      });
-
-      // 新規タスク種類の追加
-      document.getElementById('btnAddTaskType').addEventListener('click', () => {
-        const input = document.getElementById('newTaskTypeName');
-        const name = input.value.trim();
-        if (!name) {
-          showToast('タスク名を入力してください', 'error');
+        const url = `${CONFIG.GAS_URL}?action=getData&userId=${encodeURIComponent(currentUser.id)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.status !== 'ok') {
+          showError(data.message || 'データの取得に失敗しました');
           return;
         }
-        state.taskRules.push({
-          id: generateId('task'),
-          name,
-          rules: [
-            { id: generateId('rule'), daysBefore: 1, time: '20:00', targetWeekday: 'all' }
-          ]
-        });
-        input.value = '';
-        persistData();
-        renderTaskRulesSettings();
-        showToast(`タスク「${name}」を追加しました`);
-      });
-
-      // GAS URL 保存
-      document.getElementById('btnSaveGasUrl').addEventListener('click', () => {
-        const url = document.getElementById('inputGasUrl').value.trim();
-        state.gasApiUrl = url;
-        localStorage.setItem(STORAGE_KEYS.GAS_URL, url);
-        updateSyncStatusUI();
-        showToast(url ? 'GAS連携URLを保存しました' : 'GAS連携URLを解除しました');
-      });
-
-      // デモデータ初期化
-      document.getElementById('btnResetDemoData').addEventListener('click', () => {
-        state.events = createInitialSampleEvents();
-        state.taskRules = JSON.parse(JSON.stringify(DEFAULT_TASK_RULES));
-        persistData();
-        renderTaskRulesSettings();
-        renderCalendar();
-        renderSelectedDateEvents();
-        showToast('サンプルデータを初期状態に復元しました');
-      });
-
-      // すべての閉じるボタン
-      document.querySelectorAll('.btnCloseModal').forEach(btn => {
-        btn.addEventListener('click', () => {
-          closeModal(btn.dataset.target);
-        });
-      });
+        allSchedules = (data.schedules || []).sort((a, b) => a.date.localeCompare(b.date));
+        allRules = data.rules || [];
+        renderAll();
+      } catch (err) {
+        showError('通信エラーが発生しました。GASのURL設定を確認してください。');
+      } finally {
+        setLoading(false);
+      }
     }
 
-    // =========================================================================
-    // アプリ起動
-    // =========================================================================
-    window.addEventListener('DOMContentLoaded', () => {
-      loadAppData();
-      initEventListeners();
+    // 予定の登録
+    async function submitSchedule(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = '送信中...';
+
+      const type = document.querySelector('input[name="type"]:checked').value;
+      const category = document.getElementById('inp-category').value;
+      const title = document.getElementById('inp-title').value.trim();
+      const time = document.getElementById('inp-time').value;
+      const scope = document.getElementById('inp-scope').value.trim();
+      const memo = document.getElementById('inp-memo').value.trim();
+      const dateInputs = Array.from(document.querySelectorAll('.inp-date')).map(el => el.value).filter(Boolean);
+
+      const items = dateInputs.map(date => ({
+        type, category, title, date, time, scope, memo,
+        userName: currentUser.name
+      }));
+
+      try {
+        const res = await fetch(CONFIG.GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'add',
+            userId: currentUser.id,
+            items
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          closeModal();
+          document.getElementById('add-form').reset();
+          resetDateInputs();
+          await fetchData();
+        } else {
+          alert('登録エラー: ' + (data.message || '失敗しました'));
+        }
+      } catch (err) {
+        alert('通信エラーが発生しました');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '登録する';
+      }
+    }
+
+    // 予定の削除
+    async function deleteSchedule(id, title) {
+      if (!confirm(`「${title}」を削除しますか？`)) return;
+      setLoading(true);
+      try {
+        const res = await fetch(CONFIG.GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'delete',
+            userId: currentUser.id,
+            id
+          })
+        });
+        const data = await res.json();
+        if (data.status === 'ok') {
+          await fetchData();
+        } else {
+          alert('削除できませんでした: ' + data.message);
+        }
+      } catch (err) {
+        alert('通信エラーが発生しました');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // 描画処理
+    function renderAll() {
+      renderList();
       renderCalendar();
-      renderSelectedDateEvents();
-      lucide.createIcons();
-    });
+      renderRules();
+    }
+
+    function getFilteredSchedules() {
+      if (currentFilter === 'all') return allSchedules;
+      return allSchedules.filter(s => s.type === currentFilter);
+    }
+
+    function renderList() {
+      const container = document.getElementById('view-list');
+      const list = getFilteredSchedules();
+      if (list.length === 0) {
+        container.innerHTML = `<div class="text-center text-slate-500 py-12 text-sm">予定はまだありません。右下の「＋」から追加できます！</div>`;
+        return;
+      }
+      container.innerHTML = list.map(item => createCardHTML(item)).join('');
+    }
+
+    function createCardHTML(item) {
+      const todayStr = formatYMD(new Date());
+      const diff = Math.round((new Date(item.date) - new Date(todayStr)) / 86400000);
+      let badge = '';
+      if (diff < 0) badge = `<span class="text-[11px] bg-slate-700 text-slate-400 px-2 py-0.5 rounded">終了</span>`;
+      else if (diff === 0) badge = `<span class="text-[11px] bg-rose-600 text-white font-bold px-2 py-0.5 rounded">🔥 本日</span>`;
+      else if (diff === 1) badge = `<span class="text-[11px] bg-amber-600 text-white font-bold px-2 py-0.5 rounded">⚠️ 明日</span>`;
+      else badge = `<span class="text-[11px] bg-slate-700 text-slate-300 px-2 py-0.5 rounded">あと${diff}日</span>`;
+
+      const typeBadge = item.type === '全体'
+        ? `<span class="text-[11px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded">📢 全体</span>`
+        : `<span class="text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded">🔒 個人</span>`;
+
+      return `
+        <div class="bg-slate-800 border border-slate-700/80 rounded-xl p-4 shadow-sm">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+              ${typeBadge}
+              <span class="text-xs font-bold text-slate-300 bg-slate-700/70 px-2 py-0.5 rounded">${escapeHTML(item.category)}</span>
+              ${badge}
+            </div>
+            <button onclick="deleteSchedule('${item.id}', '${escapeHTML(item.title)}')" class="text-slate-500 hover:text-rose-400 text-xs px-1.5 py-0.5">削除</button>
+          </div>
+          <h3 class="font-bold text-base text-white mb-1">${escapeHTML(item.title)}</h3>
+          <div class="text-xs text-slate-300 flex items-center gap-3">
+            <span>📅 ${item.date} ${item.time ? escapeHTML(item.time) : ''}</span>
+            ${item.type === '全体' && item.userName ? `<span class="text-slate-400">by ${escapeHTML(item.userName)}</span>` : ''}
+          </div>
+          ${item.scope ? `<div class="mt-2 text-xs bg-slate-900/80 text-amber-200 px-3 py-1.5 rounded-lg border border-slate-700">📖 範囲: ${escapeHTML(item.scope)}</div>` : ''}
+          ${item.memo ? `<div class="mt-1.5 text-xs text-slate-400">💬 ${escapeHTML(item.memo)}</div>` : ''}
+        </div>
+      `;
+    }
+
+    function renderCalendar() {
+      document.getElementById('cal-title').textContent = `${calYear}年 ${calMonth + 1}月`;
+      const firstDay = new Date(calYear, calMonth, 1).getDay();
+      const lastDate = new Date(calYear, calMonth + 1, 0).getDate();
+      const list = getFilteredSchedules();
+      const todayStr = formatYMD(new Date());
+
+      let html = '';
+      for (let i = 0; i < firstDay; i++) html += `<div></div>`;
+
+      for (let d = 1; d <= lastDate; d++) {
+        const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const dayItems = list.filter(s => s.date === dateStr);
+        const isSelected = dateStr === selectedCalDate;
+        const isToday = dateStr === todayStr;
+
+        const dots = dayItems.slice(0, 3).map(s =>
+          `<span class="w-1.5 h-1.5 rounded-full ${s.type === '全体' ? 'bg-indigo-400' : 'bg-emerald-400'}"></span>`
+        ).join('');
+
+        html += `
+          <button onclick="selectCalDate('${dateStr}')" class="h-12 rounded-xl flex flex-col items-center justify-center transition ${isSelected ? 'bg-indigo-600 text-white font-bold' : (isToday ? 'bg-slate-700 text-white' : 'hover:bg-slate-700/50 text-slate-300')}">
+            <span>${d}</span>
+            <div class="flex gap-0.5 mt-1 h-1.5">${dots}</div>
+          </button>
+        `;
+      }
+      document.getElementById('cal-days').innerHTML = html;
+
+      const selectedItems = list.filter(s => s.date === selectedCalDate);
+      const selContainer = document.getElementById('cal-selected-list');
+      selContainer.innerHTML = `<div class="text-xs font-bold text-slate-400 px-1">${selectedCalDate} の予定（${selectedItems.length}件）</div>` +
+        (selectedItems.length ? selectedItems.map(createCardHTML).join('') : `<div class="text-xs text-slate-500 p-4 bg-slate-800/40 rounded-xl text-center">この日の予定はありません</div>`);
+    }
+
+    function renderRules() {
+      const container = document.getElementById('rules-list');
+      container.innerHTML = allRules.map(r => {
+        const daysText = r.daysBefore.split(',').map(d => d.trim() === '0' ? '当日' : `${d.trim()}日前`).join('・');
+        return `
+          <div class="bg-slate-800 border border-slate-700 rounded-xl p-3.5 flex items-center justify-between">
+            <span class="font-bold text-sm">${escapeHTML(r.category)}</span>
+            <span class="text-xs text-indigo-300 bg-indigo-950 border border-indigo-800 px-2.5 py-1 rounded-lg">${daysText}（${r.notifyHour}時頃）</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // UI操作系
+    function switchTab(tab) {
+      currentTab = tab;
+      ['list', 'cal', 'rules'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById(`tab-${t}`);
+        btn.className = t === tab ? 'py-2 rounded-lg bg-indigo-600 text-white transition' : 'py-2 rounded-lg text-slate-400 transition';
+      });
+      document.getElementById('filter-bar').classList.toggle('hidden', tab === 'rules');
+    }
+
+    function setFilter(flt) {
+      currentFilter = flt;
+      ['all', '全体', '個人'].forEach(f => {
+        const btn = document.getElementById(`flt-${f}`);
+        btn.className = f === flt ? 'px-3 py-1.5 rounded-full bg-slate-700 text-white font-bold' : 'px-3 py-1.5 rounded-full bg-slate-800 text-slate-400';
+      });
+      renderAll();
+    }
+
+    function changeMonth(delta) {
+      calMonth += delta;
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      renderCalendar();
+    }
+
+    function selectCalDate(dateStr) {
+      selectedCalDate = dateStr;
+      renderCalendar();
+    }
+
+    function openModal() {
+      document.getElementById('add-modal').classList.remove('hidden');
+      const firstDate = document.querySelector('.inp-date');
+      if (firstDate && !firstDate.value) firstDate.value = selectedCalDate;
+    }
+
+    function closeModal() {
+      document.getElementById('add-modal').classList.add('hidden');
+    }
+
+    function addDateInput() {
+      const div = document.createElement('div');
+      div.className = 'flex gap-2';
+      div.innerHTML = `
+        <input type="date" required class="inp-date flex-1 bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" />
+        <button type="button" onclick="this.parentElement.remove()" class="px-3 bg-slate-700 rounded-xl text-slate-300">✕</button>
+      `;
+      document.getElementById('date-inputs').appendChild(div);
+    }
+
+    function resetDateInputs() {
+      document.getElementById('date-inputs').innerHTML = `
+        <input type="date" required class="inp-date w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" />
+      `;
+    }
+
+    function setLoading(flag) {
+      document.getElementById('loading-bar').classList.toggle('hidden', !flag);
+    }
+
+    function showError(msg) {
+      const box = document.getElementById('error-box');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+    }
+
+    function hideError() {
+      document.getElementById('error-box').classList.add('hidden');
+    }
+
+    function formatYMD(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function escapeHTML(str) {
+      return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
   </script>
 </body>
 </html>
