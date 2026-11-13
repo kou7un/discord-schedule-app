@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
   <script>
     const CONFIG = {
       CLIENT_ID: '1570627417616420985',
@@ -18,73 +18,77 @@
     };
   </script>
   <style>
-    body { font-family: 'Inter', 'Noto Sans JP', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Zen Maru Gothic', 'Noto Sans JP', sans-serif; -webkit-tap-highlight-color: transparent; }
     input, select, textarea { font-size: 16px !important; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .soft-card { box-shadow: 0 6px 24px -6px rgba(244, 114, 128, 0.12); }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen pb-28 selection:bg-indigo-500 selection:text-white">
-  <div id="login-screen" class="hidden min-h-screen flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-slate-900 to-slate-950">
-    <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
-      <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-3xl">📅</div>
-      <h1 class="text-2xl font-bold tracking-tight mb-2">Discord 予定管理</h1>
-      <p class="text-slate-400 text-sm leading-relaxed mb-7">課題・テスト・予定をスマートに共有して<br>Discordへ自動リマインド</p>
-      <button onclick="startLogin()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] transition text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-indigo-600/25">Discordでログイン</button>
+<body class="bg-[#FFF9FA] text-[#4A3F44] min-h-screen pb-28 selection:bg-rose-200 selection:text-rose-900">
+  <div id="login-screen" class="hidden min-h-screen flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-[#FFF2F5] via-[#FFF9FA] to-[#FFF5F7]">
+    <div class="bg-white/95 border border-rose-100 rounded-[32px] p-8 max-w-sm w-full soft-card">
+      <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-gradient-to-tr from-rose-100 to-pink-50 border border-rose-200/70 flex items-center justify-center text-3xl">🌸</div>
+      <h1 class="text-xl font-bold tracking-wide text-[#4A3F44] mb-2">Discord 予定管理</h1>
+      <p class="text-[#8C7A82] text-xs leading-relaxed mb-7">毎日の課題・テスト・予定をやさしく整理して<br>Discordへ自動でお知らせします</p>
+      <button onclick="startLogin()" class="w-full bg-gradient-to-r from-[#F47280] to-[#FB7185] hover:opacity-95 active:scale-[0.98] transition text-white font-bold py-3.5 px-6 rounded-full shadow-lg shadow-rose-200">Discordでログイン</button>
     </div>
   </div>
   <div id="app-screen" class="hidden max-w-2xl mx-auto">
-    <header class="sticky top-0 z-20 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 flex items-center justify-between">
+    <header class="sticky top-0 z-20 bg-white/85 backdrop-blur-md border-b border-rose-100/80 px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <img id="user-avatar" src="" alt="" class="w-9 h-9 rounded-full ring-2 ring-indigo-500/40 bg-slate-800" />
+        <img id="user-avatar" src="" alt="" class="w-9 h-9 rounded-full ring-2 ring-rose-200 bg-rose-50" />
         <div>
-          <div id="user-name" class="text-sm font-bold leading-tight text-white"></div>
-          <div class="text-[11px] text-emerald-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>認証済み</div>
+          <div id="user-name" class="text-sm font-bold leading-tight text-[#4A3F44]"></div>
+          <div class="text-[11px] text-rose-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>サーバー認証済み</div>
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button onclick="fetchData()" class="px-3 py-1.5 text-slate-200 hover:text-white bg-slate-800/90 hover:bg-slate-700 border border-slate-700/70 rounded-xl text-xs font-medium transition active:scale-95">🔄 同期</button>
-        <button onclick="logout()" class="px-2.5 py-1.5 text-slate-400 hover:text-rose-400 text-xs transition">ログアウト</button>
+        <button onclick="fetchData()" class="px-3.5 py-1.5 text-[#6E5D64] hover:text-rose-500 bg-rose-50/80 hover:bg-rose-100/70 border border-rose-100 rounded-full text-xs font-bold transition active:scale-95">🔄 同期</button>
+        <button onclick="logout()" class="px-2 py-1.5 text-[#9E8C93] hover:text-rose-500 text-xs transition">ログアウト</button>
       </div>
     </header>
 
-    <div id="loading-bar" class="hidden bg-indigo-600/90 text-white text-xs font-medium text-center py-1.5 animate-pulse">スプレッドシートと同期中...</div>
-    <div id="error-box" class="hidden m-4 p-4 bg-rose-950/90 border border-rose-700/80 rounded-2xl text-rose-200 text-sm"></div>
-    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 hidden bg-slate-800 border border-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl"></div>
+    <div id="loading-bar" class="hidden bg-gradient-to-r from-rose-400 to-pink-400 text-white text-xs font-bold text-center py-1.5 animate-pulse">データを読み込み中...</div>
+    <div id="error-box" class="hidden m-4 p-4 bg-rose-50 border border-rose-200 rounded-3xl text-rose-700 text-xs leading-relaxed"></div>
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 hidden bg-[#4A3F44] text-white text-xs font-bold px-5 py-2.5 rounded-full shadow-xl"></div>
+
     <main id="view-list" class="p-4 space-y-4">
+      <div id="today-hero" class="bg-gradient-to-r from-[#FFE8EC] via-[#FFF1F3] to-[#FFF7EB] border border-rose-200/60 rounded-3xl p-4 soft-card"></div>
+
       <div class="space-y-2.5">
-        <div class="relative">
-          <input id="search-input" type="text" oninput="renderList()" placeholder="🔍 タイトル・範囲・メモを検索..." class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 focus:outline-none rounded-2xl py-2.5 px-4 text-sm text-white placeholder-slate-500" />
-        </div>
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800/80 text-xs">
-            <button onclick="setFilter('all')" id="flt-all" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold transition">すべて</button>
-            <button onclick="setFilter('全体')" id="flt-全体" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">📢 全体</button>
-            <button onclick="setFilter('個人')" id="flt-個人" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition">🔒 個人</button>
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1">
+            <input id="search-input" type="text" oninput="renderList()" placeholder="🔍 予定・範囲・メモを検索..." class="w-full bg-white border border-rose-100 focus:border-rose-300 focus:outline-none rounded-full py-2.5 px-4 text-sm text-[#4A3F44] placeholder-[#B5A4AB]" />
+          </div>
+          <div class="flex gap-1 bg-white p-1 rounded-full border border-rose-100 text-xs shrink-0">
+            <button onclick="setFilter('all')" id="flt-all" class="px-3 py-1.5 rounded-full bg-[#F47280] text-white font-bold transition">すべて</button>
+            <button onclick="setFilter('全体')" id="flt-全体" class="px-2.5 py-1.5 rounded-full text-[#8C7A82] hover:text-rose-500 transition">📢全体</button>
+            <button onclick="setFilter('個人')" id="flt-個人" class="px-2.5 py-1.5 rounded-full text-[#8C7A82] hover:text-rose-500 transition">🔒個人</button>
           </div>
         </div>
         <div id="cat-filter-bar" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1 text-xs"></div>
       </div>
-
       <div id="schedule-groups" class="space-y-5"></div>
 
-      <div id="past-toggle-wrap" class="hidden pt-2">
-        <button type="button" onclick="togglePast()" id="past-toggle-btn" class="w-full py-2.5 px-4 bg-slate-900/80 hover:bg-slate-900 border border-slate-800 rounded-2xl text-xs text-slate-400 font-medium flex items-center justify-between">
+      <div id="past-toggle-wrap" class="hidden pt-1">
+        <button type="button" onclick="togglePast()" id="past-toggle-btn" class="w-full py-3 px-4 bg-white/80 hover:bg-white border border-rose-100 rounded-full text-xs text-[#8C7A82] font-bold flex items-center justify-between transition">
           <span id="past-toggle-label">終了した予定を表示</span>
           <span id="past-toggle-arrow">▼</span>
         </button>
         <div id="past-list" class="hidden mt-3 space-y-2.5 opacity-75"></div>
       </div>
     </main>
+
     <section id="view-cal" class="hidden p-4 space-y-4">
-      <div class="bg-slate-900 rounded-3xl p-4 border border-slate-800 shadow-lg">
+      <div class="bg-white rounded-3xl p-4 border border-rose-100 soft-card">
         <div class="flex items-center justify-between mb-4 px-1">
-          <button onclick="changeMonth(-1)" class="w-9 h-9 flex items-center justify-center bg-slate-800 hover:bg-slate-700 rounded-xl text-sm">◀</button>
-          <h2 id="cal-title" class="font-bold text-base tracking-wide"></h2>
-          <button onclick="changeMonth(1)" class="w-9 h-9 flex items-center justify-center bg-slate-800 hover:bg-slate-700 rounded-xl text-sm">▶</button>
+          <button onclick="changeMonth(-1)" class="w-9 h-9 flex items-center justify-center bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-full text-xs font-bold transition">◀</button>
+          <h2 id="cal-title" class="font-bold text-base text-[#4A3F44] tracking-wide"></h2>
+          <button onclick="changeMonth(1)" class="w-9 h-9 flex items-center justify-center bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-full text-xs font-bold transition">▶</button>
         </div>
-        <div class="calendar-grid text-center text-[11px] font-bold text-slate-500 mb-2">
+        <div class="calendar-grid text-center text-[11px] font-bold text-[#9E8C93] mb-2">
           <div class="text-rose-400">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="text-sky-400">土</div>
         </div>
         <div id="cal-days" class="calendar-grid gap-1 text-center text-sm"></div>
@@ -92,123 +96,122 @@
 
       <div class="space-y-2.5">
         <div class="flex items-center justify-between px-1">
-          <div id="cal-selected-title" class="text-xs font-bold text-slate-300"></div>
-          <button onclick="openModal(selectedCalDate)" class="text-xs bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-xl font-bold transition">＋ この日に追加</button>
+          <div id="cal-selected-title" class="text-xs font-bold text-[#6E5D64]"></div>
+          <button onclick="openModal(selectedCalDate)" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-500 border border-rose-200/70 px-3.5 py-1.5 rounded-full font-bold transition">＋ この日に追加</button>
         </div>
         <div id="cal-selected-list" class="space-y-2.5"></div>
       </div>
     </section>
-
     <section id="view-rules" class="hidden p-4 space-y-4">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between bg-white border border-rose-100 rounded-3xl p-4 soft-card">
         <div>
-          <h2 class="font-bold text-base text-white">カテゴリ・自動通知設定</h2>
-          <p class="text-[11px] text-slate-400 mt-0.5">土・日・月の予定は毎週金曜18時に自動通知されます</p>
+          <h2 class="font-bold text-sm text-[#4A3F44]">🔔 カテゴリ・自動通知設定</h2>
+          <p class="text-[11px] text-[#8C7A82] mt-0.5">土・日・月の予定は毎週金曜18時に自動通知されます</p>
         </div>
-        <button onclick="openNewRuleForm()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md">＋ 新規追加</button>
+        <button onclick="openNewRuleForm()" class="bg-gradient-to-r from-[#F47280] to-[#FB7185] text-white text-xs font-bold px-3.5 py-2 rounded-full shadow-md shadow-rose-200 shrink-0">＋ 追加</button>
       </div>
 
-      <div id="rule-editor-card" class="hidden bg-slate-900 border border-indigo-500/40 rounded-3xl p-4 space-y-3.5 shadow-xl">
-        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
-          <h3 id="rule-form-title" class="font-bold text-sm text-indigo-300">カテゴリの通知設定</h3>
-          <button type="button" onclick="closeRuleForm()" class="text-xs text-slate-400 hover:text-white px-2 py-1">✕ 閉じる</button>
+      <div id="rule-editor-card" class="hidden bg-white border border-rose-200 rounded-3xl p-4 space-y-3.5 soft-card">
+        <div class="flex items-center justify-between border-b border-rose-100 pb-2.5">
+          <h3 id="rule-form-title" class="font-bold text-sm text-rose-500">カテゴリの通知設定</h3>
+          <button type="button" onclick="closeRuleForm()" class="text-xs text-[#9E8C93] hover:text-rose-500 px-2 py-1">✕ 閉じる</button>
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">カテゴリ名 *</label>
-          <input id="rule-cat" type="text" placeholder="例：課題、テスト、部活、バイト" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm" />
+          <label class="block text-xs text-[#8C7A82] font-bold mb-1">カテゴリ名 *</label>
+          <input id="rule-cat" type="text" placeholder="例：課題、テスト、部活、バイト" class="w-full bg-[#FFF9FA] border border-rose-100 focus:border-rose-300 focus:outline-none rounded-2xl p-2.5 text-[#4A3F44] text-sm" />
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1.5">日数通知（複数選択可）</label>
+          <label class="block text-xs text-[#8C7A82] font-bold mb-1.5">日数通知（複数選択可）</label>
           <div class="flex flex-wrap gap-2 text-xs">
-            <label class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl cursor-pointer"><input type="checkbox" class="rule-day mr-1.5 accent-indigo-500" value="0" checked />当日</label>
-            <label class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl cursor-pointer"><input type="checkbox" class="rule-day mr-1.5 accent-indigo-500" value="1" checked />1日前</label>
-            <label class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl cursor-pointer"><input type="checkbox" class="rule-day mr-1.5 accent-indigo-500" value="2" />2日前</label>
-            <label class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl cursor-pointer"><input type="checkbox" class="rule-day mr-1.5 accent-indigo-500" value="3" />3日前</label>
-            <label class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl cursor-pointer"><input type="checkbox" class="rule-day mr-1.5 accent-indigo-500" value="7" />7日前</label>
+            <label class="bg-[#FFF9FA] border border-rose-100 px-3 py-1.5 rounded-full cursor-pointer"><input type="checkbox" class="rule-day mr-1.5 accent-rose-400" value="0" checked />当日</label>
+            <label class="bg-[#FFF9FA] border border-rose-100 px-3 py-1.5 rounded-full cursor-pointer"><input type="checkbox" class="rule-day mr-1.5 accent-rose-400" value="1" checked />1日前</label>
+            <label class="bg-[#FFF9FA] border border-rose-100 px-3 py-1.5 rounded-full cursor-pointer"><input type="checkbox" class="rule-day mr-1.5 accent-rose-400" value="2" />2日前</label>
+            <label class="bg-[#FFF9FA] border border-rose-100 px-3 py-1.5 rounded-full cursor-pointer"><input type="checkbox" class="rule-day mr-1.5 accent-rose-400" value="3" />3日前</label>
+            <label class="bg-[#FFF9FA] border border-rose-100 px-3 py-1.5 rounded-full cursor-pointer"><input type="checkbox" class="rule-day mr-1.5 accent-rose-400" value="7" />7日前</label>
           </div>
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">通知を送る時間帯</label>
-          <select id="rule-hour" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white text-sm"></select>
+          <label class="block text-xs text-[#8C7A82] font-bold mb-1">通知を送る時間帯</label>
+          <select id="rule-hour" class="w-full bg-[#FFF9FA] border border-rose-100 rounded-2xl p-2.5 text-[#4A3F44] text-sm"></select>
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1.5">直前通知（時間を入力した予定で作動）</label>
+          <label class="block text-xs text-[#8C7A82] font-bold mb-1.5">直前通知（時間を入力した予定で作動）</label>
           <div class="flex flex-wrap gap-2 text-xs">
-            <label class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl cursor-pointer"><input type="checkbox" class="rule-min mr-1.5 accent-indigo-500" value="60" />1時間前</label>
-            <label class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl cursor-pointer"><input type="checkbox" class="rule-min mr-1.5 accent-indigo-500" value="30" />30分前</label>
-            <label class="bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl cursor-pointer"><input type="checkbox" class="rule-min mr-1.5 accent-indigo-500" value="10" />10分前</label>
+            <label class="bg-[#FFF9FA] border border-rose-100 px-3 py-1.5 rounded-full cursor-pointer"><input type="checkbox" class="rule-min mr-1.5 accent-rose-400" value="60" />1時間前</label>
+            <label class="bg-[#FFF9FA] border border-rose-100 px-3 py-1.5 rounded-full cursor-pointer"><input type="checkbox" class="rule-min mr-1.5 accent-rose-400" value="30" />30分前</label>
+            <label class="bg-[#FFF9FA] border border-rose-100 px-3 py-1.5 rounded-full cursor-pointer"><input type="checkbox" class="rule-min mr-1.5 accent-rose-400" value="10" />10分前</label>
           </div>
         </div>
-        <button type="button" id="save-rule-btn" onclick="saveRule()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-sm shadow-lg">設定を保存する</button>
+        <button type="button" id="save-rule-btn" onclick="saveRule()" class="w-full bg-gradient-to-r from-[#F47280] to-[#FB7185] text-white font-bold py-3 rounded-full text-sm shadow-md shadow-rose-200">設定を保存する</button>
       </div>
 
       <div id="rules-list" class="space-y-2.5"></div>
     </section>
 
-    <nav class="fixed bottom-0 inset-x-0 z-30 bg-slate-950/90 backdrop-blur-md border-t border-slate-800/90">
+    <nav class="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-rose-100 shadow-[0_-4px_20px_-6px_rgba(244,114,128,0.10)]">
       <div class="max-w-2xl mx-auto px-4 py-2 flex items-center justify-around">
-        <button id="nav-list" onclick="switchTab('list')" class="flex flex-col items-center gap-0.5 px-4 py-1 text-indigo-400 font-bold text-xs transition">
-          <span class="text-lg">📋</span><span>予定一覧</span>
+        <button id="nav-list" onclick="switchTab('list')" class="flex flex-col items-center gap-0.5 px-4 py-1 text-rose-500 font-bold text-xs transition">
+          <span class="text-lg">🌸</span><span>予定一覧</span>
         </button>
-        <button id="nav-cal" onclick="switchTab('cal')" class="flex flex-col items-center gap-0.5 px-4 py-1 text-slate-400 hover:text-slate-200 text-xs transition">
+        <button id="nav-cal" onclick="switchTab('cal')" class="flex flex-col items-center gap-0.5 px-4 py-1 text-[#9E8C93] hover:text-rose-400 text-xs transition">
           <span class="text-lg">🗓️</span><span>カレンダー</span>
         </button>
-        <button onclick="openModal()" class="-mt-6 bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition text-white font-bold w-14 h-14 rounded-2xl shadow-xl shadow-indigo-600/30 flex items-center justify-center text-3xl border-4 border-slate-950">＋</button>
-        <button id="nav-rules" onclick="switchTab('rules')" class="flex flex-col items-center gap-0.5 px-4 py-1 text-slate-400 hover:text-slate-200 text-xs transition">
+        <button onclick="openModal()" class="-mt-6 bg-gradient-to-tr from-[#F47280] to-[#FB7185] hover:opacity-95 active:scale-95 transition text-white font-bold w-14 h-14 rounded-full shadow-lg shadow-rose-300/60 flex items-center justify-center text-3xl border-4 border-[#FFF9FA]">＋</button>
+        <button id="nav-rules" onclick="switchTab('rules')" class="flex flex-col items-center gap-0.5 px-4 py-1 text-[#9E8C93] hover:text-rose-400 text-xs transition">
           <span class="text-lg">🔔</span><span>通知設定</span>
         </button>
       </div>
     </nav>
   </div>
-  <div id="add-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-xs z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-slate-900 border-t sm:border border-slate-800 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-5 max-h-[92vh] overflow-y-auto shadow-2xl">
-      <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
-        <h3 id="modal-title" class="text-lg font-bold text-white">新しい予定を追加</h3>
-        <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">✕</button>
+  <div id="add-modal" class="hidden fixed inset-0 bg-[#4A3F44]/40 backdrop-blur-xs z-40 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white border-t sm:border border-rose-100 w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] p-5 max-h-[92vh] overflow-y-auto shadow-2xl">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-rose-100">
+        <h3 id="modal-title" class="text-base font-bold text-[#4A3F44]">🌷 新しい予定を追加</h3>
+        <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-rose-50 text-rose-400 hover:bg-rose-100 flex items-center justify-center font-bold">✕</button>
       </div>
       <form id="add-form" onsubmit="submitSchedule(event)" class="space-y-4">
         <div>
-          <label class="block text-xs text-slate-400 mb-1.5">公開範囲・通知先</label>
+          <label class="block text-xs text-[#8C7A82] font-bold mb-1.5">公開範囲・通知先</label>
           <div class="grid grid-cols-2 gap-2.5">
-            <label class="cursor-pointer"><input type="radio" name="type" value="全体" checked class="peer hidden" /><div class="peer-checked:bg-indigo-600 peer-checked:border-indigo-400 peer-checked:text-white text-slate-300 bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center text-sm font-bold transition">📢 全体（チャンネル）</div></label>
-            <label class="cursor-pointer"><input type="radio" name="type" value="個人" class="peer hidden" /><div class="peer-checked:bg-emerald-600 peer-checked:border-emerald-400 peer-checked:text-white text-slate-300 bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center text-sm font-bold transition">🔒 個人（DM）</div></label>
+            <label class="cursor-pointer"><input type="radio" name="type" value="全体" checked class="peer hidden" /><div class="peer-checked:bg-[#F47280] peer-checked:border-[#F47280] peer-checked:text-white text-[#6E5D64] bg-[#FFF9FA] border border-rose-100 rounded-2xl p-3 text-center text-xs font-bold transition">📢 全体（チャンネル）</div></label>
+            <label class="cursor-pointer"><input type="radio" name="type" value="個人" class="peer hidden" /><div class="peer-checked:bg-teal-500 peer-checked:border-teal-500 peer-checked:text-white text-[#6E5D64] bg-[#FFF9FA] border border-rose-100 rounded-2xl p-3 text-center text-xs font-bold transition">🔒 個人（DM）</div></label>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs text-slate-400 mb-1">カテゴリ</label>
-            <select id="inp-category" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-white"></select>
+            <label class="block text-xs text-[#8C7A82] font-bold mb-1">カテゴリ</label>
+            <select id="inp-category" class="w-full bg-[#FFF9FA] border border-rose-100 rounded-2xl p-3 text-[#4A3F44]"></select>
           </div>
           <div>
-            <label class="block text-xs text-slate-400 mb-1">時間（任意・直前通知用）</label>
-            <input id="inp-time" type="time" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-white" />
+            <label class="block text-xs text-[#8C7A82] font-bold mb-1">時間（任意・直前通知用）</label>
+            <input id="inp-time" type="time" class="w-full bg-[#FFF9FA] border border-rose-100 rounded-2xl p-3 text-[#4A3F44]" />
           </div>
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">タイトル *</label>
-          <input id="inp-title" type="text" required placeholder="例：数学ワーク提出 / 英語小テスト" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-white" />
+          <label class="block text-xs text-[#8C7A82] font-bold mb-1">タイトル *</label>
+          <input id="inp-title" type="text" required placeholder="例：数学ワーク提出 / 英語小テスト" class="w-full bg-[#FFF9FA] border border-rose-100 focus:border-rose-300 focus:outline-none rounded-2xl p-3 text-[#4A3F44]" />
         </div>
         <div>
           <div class="flex items-center justify-between mb-1.5">
-            <label class="text-xs text-slate-400">日付 *</label>
+            <label class="text-xs text-[#8C7A82] font-bold">日付 *</label>
             <div class="flex items-center gap-1.5">
-              <button type="button" onclick="setQuickDate(0)" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded-lg">今日</button>
-              <button type="button" onclick="setQuickDate(1)" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded-lg">明日</button>
-              <button type="button" onclick="setQuickDate(7)" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-1 rounded-lg">1週間後</button>
-              <button type="button" id="add-date-btn" onclick="addDateInput()" class="text-[11px] text-indigo-400 font-bold pl-1">＋複数日</button>
+              <button type="button" onclick="setQuickDate(0)" class="text-[11px] bg-rose-50 hover:bg-rose-100 text-rose-500 font-bold px-2.5 py-1 rounded-full">今日</button>
+              <button type="button" onclick="setQuickDate(1)" class="text-[11px] bg-rose-50 hover:bg-rose-100 text-rose-500 font-bold px-2.5 py-1 rounded-full">明日</button>
+              <button type="button" onclick="setQuickDate(7)" class="text-[11px] bg-rose-50 hover:bg-rose-100 text-rose-500 font-bold px-2.5 py-1 rounded-full">1週間後</button>
+              <button type="button" id="add-date-btn" onclick="addDateInput()" class="text-[11px] text-rose-500 font-bold pl-1">＋複数日</button>
             </div>
           </div>
-          <div id="date-inputs" class="space-y-2"><input type="date" required class="inp-date w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-white" /></div>
+          <div id="date-inputs" class="space-y-2"><input type="date" required class="inp-date w-full bg-[#FFF9FA] border border-rose-100 rounded-2xl p-3 text-[#4A3F44]" /></div>
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">範囲・持ち物（任意）</label>
-          <input id="inp-scope" type="text" placeholder="例：P.24〜31、関数電卓" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-white" />
+          <label class="block text-xs text-[#8C7A82] font-bold mb-1">範囲・持ち物（任意）</label>
+          <input id="inp-scope" type="text" placeholder="例：P.24〜31、関数電卓" class="w-full bg-[#FFF9FA] border border-rose-100 focus:border-rose-300 focus:outline-none rounded-2xl p-3 text-[#4A3F44]" />
         </div>
         <div>
-          <label class="block text-xs text-slate-400 mb-1">メモ（任意）</label>
-          <textarea id="inp-memo" rows="2" placeholder="補足があれば入力" class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-white"></textarea>
+          <label class="block text-xs text-[#8C7A82] font-bold mb-1">メモ（任意）</label>
+          <textarea id="inp-memo" rows="2" placeholder="補足があれば入力" class="w-full bg-[#FFF9FA] border border-rose-100 focus:border-rose-300 focus:outline-none rounded-2xl p-3 text-[#4A3F44]"></textarea>
         </div>
-        <button type="submit" id="submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] transition text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-indigo-600/25">登録する</button>
+        <button type="submit" id="submit-btn" class="w-full bg-gradient-to-r from-[#F47280] to-[#FB7185] hover:opacity-95 active:scale-[0.99] transition text-white font-bold py-3.5 rounded-full shadow-lg shadow-rose-200">登録する</button>
       </form>
     </div>
   </div>
@@ -260,15 +263,78 @@
       document.getElementById('user-name').textContent = currentUser.name;
       document.getElementById('user-avatar').src = currentUser.avatar;
     }
-
     function showToast(msg) {
       const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.remove('hidden');
+      t.textContent = msg; t.classList.remove('hidden');
       clearTimeout(window._toastTimer);
       window._toastTimer = setTimeout(() => t.classList.add('hidden'), 2600);
     }
+    async function fetchData() {
+      setLoading(true); hideError();
+      try {
+        const res = await fetch(`${CONFIG.GAS_URL}?action=getData&userId=${encodeURIComponent(currentUser.id)}&token=${encodeURIComponent(CONFIG.APP_SECRET)}`);
+        const data = await res.json();
+        if (data.status !== 'ok') { showError(data.message || 'データの取得に失敗しました'); return; }
+        allSchedules = (data.schedules || []).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+        allRules = data.rules || [];
+        renderAll();
+      } catch (err) { showError('通信エラーが発生しました。GASのURL設定を確認してください。'); }
+      finally { setLoading(false); }
+    }
+  <script>
+    let currentUser = null, allSchedules = [], allRules = [];
+    let currentFilter = 'all', currentCatFilter = 'all', currentTab = 'list', editingScheduleId = null, showPast = false;
+    let calYear = new Date().getFullYear(), calMonth = new Date().getMonth(), selectedCalDate = formatYMD(new Date());
 
+    window.addEventListener('DOMContentLoaded', async () => {
+      const hourSel = document.getElementById('rule-hour');
+      for (let h = 0; h < 24; h++) {
+        const opt = document.createElement('option'); opt.value = h; opt.textContent = `${h}時頃`;
+        if (h === 7) opt.selected = true;
+        hourSel.appendChild(opt);
+      }
+      if (window.location.hash.includes('access_token=')) {
+        const token = new URLSearchParams(window.location.hash.substring(1)).get('access_token');
+        if (token) { localStorage.setItem('discord_token', token); history.replaceState(null, '', window.location.pathname); }
+      }
+      const token = localStorage.getItem('discord_token');
+      if (!token) { showLogin(); return; }
+      try {
+        const res = await fetch('https://discord.com/api/v10/users/@me', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) throw new Error('Token expired');
+        const user = await res.json();
+        const guildsRes = await fetch('https://discord.com/api/v10/users/@me/guilds', { headers: { Authorization: `Bearer ${token}` } });
+        if (!guildsRes.ok) { localStorage.removeItem('discord_token'); showLogin(); return; }
+        const guilds = await guildsRes.json();
+        const isMember = guilds.some(g => g.id === CONFIG.GUILD_ID);
+        currentUser = {
+          id: user.id,
+          name: user.global_name || user.username,
+          avatar: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png'
+        };
+        showApp();
+        if (!isMember) { showError(`指定されたサーバーへの参加が確認できませんでした。（ID: ${CONFIG.GUILD_ID}）`); return; }
+        await fetchData();
+      } catch (e) { localStorage.removeItem('discord_token'); showLogin(); }
+    });
+
+    function startLogin() {
+      window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(CONFIG.REDIRECT_URI)}&response_type=token&scope=identify%20guilds`;
+    }
+    function logout() { localStorage.removeItem('discord_token'); location.reload(); }
+    function showLogin() { document.getElementById('login-screen').classList.remove('hidden'); document.getElementById('app-screen').classList.add('hidden'); }
+    function showApp() {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+      document.getElementById('user-name').textContent = currentUser.name;
+      document.getElementById('user-avatar').src = currentUser.avatar;
+    }
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.remove('hidden');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => t.classList.add('hidden'), 2600);
+    }
     async function fetchData() {
       setLoading(true); hideError();
       try {
@@ -300,17 +366,16 @@
         const res = await fetch(CONFIG.GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
         const data = await res.json();
         if (data.status === 'ok') {
-          closeModal();
-          document.getElementById('add-form').reset();
-          resetDateInputs();
-          await fetchData();
-          showToast(isEdit ? '✅ 予定を更新しました' : '✅ 予定を追加しました');
+          closeModal(); document.getElementById('add-form').reset(); resetDateInputs();
+          await fetchData(); showToast(isEdit ? '🌸 予定を更新しました' : '🌸 予定を追加しました');
         } else alert('保存エラー: ' + (data.message || '失敗しました'));
       } catch (err) { alert('通信エラーが発生しました'); }
       finally { btn.disabled = false; btn.textContent = isEdit ? '変更を保存する' : '登録する'; }
     }
 
-    async function deleteSchedule(id, title) {
+    async function deleteSchedule(id) {
+      const item = allSchedules.find(s => String(s.id) === String(id));
+      const title = item ? item.title : 'この予定';
       if (!confirm(`「${title}」を削除しますか？`)) return;
       setLoading(true);
       try {
@@ -338,11 +403,12 @@
       finally { btn.disabled = false; btn.textContent = '設定を保存する'; }
     }
 
-    async function deleteRule(category) {
-      if (!confirm(`カテゴリ「${category}」を削除しますか？`)) return;
+    async function deleteRule(idx) {
+      const r = allRules[idx]; if (!r) return;
+      if (!confirm(`カテゴリ「${r.category}」を削除しますか？`)) return;
       setLoading(true);
       try {
-        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'deleteRule', userId: currentUser.id, token: CONFIG.APP_SECRET, category }) });
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'deleteRule', userId: currentUser.id, token: CONFIG.APP_SECRET, category: r.category }) });
         const data = await res.json();
         if (data.status === 'ok') { await fetchData(); showToast('🗑️ カテゴリを削除しました'); }
         else alert('削除エラー: ' + data.message);
@@ -352,8 +418,7 @@
 
     function openNewRuleForm() {
       document.getElementById('rule-form-title').textContent = '＋ 新しいカテゴリを追加';
-      document.getElementById('rule-cat').value = '';
-      document.getElementById('rule-hour').value = '7';
+      document.getElementById('rule-cat').value = ''; document.getElementById('rule-hour').value = '7';
       document.querySelectorAll('.rule-day').forEach(el => { el.checked = (el.value === '0' || el.value === '1'); });
       document.querySelectorAll('.rule-min').forEach(el => { el.checked = false; });
       document.getElementById('rule-editor-card').classList.remove('hidden');
@@ -361,8 +426,7 @@
     function editRule(idx) {
       const r = allRules[idx]; if (!r) return;
       document.getElementById('rule-form-title').textContent = `✏️ 「${r.category}」の通知設定`;
-      document.getElementById('rule-cat').value = r.category;
-      document.getElementById('rule-hour').value = r.notifyHour;
+      document.getElementById('rule-cat').value = r.category; document.getElementById('rule-hour').value = r.notifyHour;
       const dList = r.daysBefore ? r.daysBefore.split(',').map(s => s.trim()) : [];
       document.querySelectorAll('.rule-day').forEach(el => { el.checked = dList.includes(el.value); });
       const mList = r.beforeMins ? r.beforeMins.split(',').map(s => s.trim()) : [];
@@ -371,7 +435,43 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     function closeRuleForm() { document.getElementById('rule-editor-card').classList.add('hidden'); }
-    function renderAll() { renderCategorySelect(); renderCategoryFilters(); renderList(); renderCalendar(); renderRules(); }
+    function renderAll() { renderTodayHero(); renderCategorySelect(); renderCategoryFilters(); renderList(); renderCalendar(); renderRules(); }
+
+    function renderTodayHero() {
+      const now = new Date();
+      const todayStr = formatYMD(now);
+      const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+      const todayItems = allSchedules.filter(s => s.date === todayStr);
+      const nextItem = allSchedules.find(s => s.date > todayStr);
+      let subText = '直近の予定はありません。のんびり過ごしましょう ☕';
+      if (todayItems.length > 0) {
+        subText = `今日は「${escapeHTML(todayItems[0].title)}」${todayItems.length > 1 ? `ほか全${todayItems.length}件` : ''}の予定があります ✨`;
+      } else if (nextItem) {
+        const diff = Math.round((new Date(nextItem.date) - new Date(todayStr)) / 86400000);
+        subText = `次は ${diff === 1 ? '明日' : `${diff}日後`} に「${escapeHTML(nextItem.title)}」があります 🌷`;
+      }
+      document.getElementById('today-hero').innerHTML = `
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-[11px] font-bold text-rose-500">TODAY • ${now.getMonth() + 1}月${now.getDate()}日 (${dayNames[now.getDay()]})</div>
+            <div class="text-sm font-bold text-[#4A3F44] mt-1">${subText}</div>
+          </div>
+          <div class="text-2xl shrink-0 ml-2">${todayItems.length > 0 ? '🌷' : '🌸'}</div>
+        </div>`;
+    }
+
+    function getCatBadgeStyle(cat) {
+      const styles = [
+        'bg-rose-100/80 text-rose-600',
+        'bg-purple-100/80 text-purple-600',
+        'bg-sky-100/80 text-sky-600',
+        'bg-amber-100/80 text-amber-700',
+        'bg-teal-100/80 text-teal-700'
+      ];
+      let hash = 0;
+      for (let i = 0; i < String(cat).length; i++) hash = String(cat).charCodeAt(i) + ((hash << 5) - hash);
+      return styles[Math.abs(hash) % styles.length];
+    }
 
     function renderCategorySelect() {
       const sel = document.getElementById('inp-category');
@@ -383,8 +483,8 @@
       const cats = ['all', ...(allRules.length ? allRules.map(r => r.category) : ['課題', 'テスト', '行事', 'バイト', '個人予定'])];
       document.getElementById('cat-filter-bar').innerHTML = cats.map(c => {
         const active = currentCatFilter === c;
-        const label = c === 'all' ? '全カテゴリ' : escapeHTML(c);
-        return `<button onclick="setCatFilter('${escapeHTML(c)}')" class="shrink-0 px-3 py-1.5 rounded-full border transition ${active ? 'bg-slate-200 text-slate-900 border-white font-bold' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'}">${label}</button>`;
+        const label = c === 'all' ? 'すべて' : escapeHTML(c);
+        return `<button onclick="setCatFilter('${escapeHTML(c)}')" class="shrink-0 px-3.5 py-1.5 rounded-full border transition font-bold ${active ? 'bg-rose-100 text-rose-600 border-rose-200' : 'bg-white text-[#8C7A82] border-rose-100 hover:text-rose-500'}">${label}</button>`;
       }).join('');
     }
 
@@ -405,7 +505,6 @@
       const list = getFilteredSchedules();
       const todayStr = formatYMD(new Date());
       const todayMs = new Date(todayStr).getTime();
-
       const urgent = [], thisWeek = [], upcoming = [], past = [];
       list.forEach(item => {
         const diff = Math.round((new Date(item.date).getTime() - todayMs) / 86400000);
@@ -417,21 +516,21 @@
 
       const sections = [
         { title: '🔥 今日・明日', items: urgent },
-        { title: '📅 今週の予定（2〜7日後）', items: thisWeek },
+        { title: '🌷 今週の予定（2〜7日後）', items: thisWeek },
         { title: '🗓️ 来週以降の予定', items: upcoming }
       ].filter(sec => sec.items.length > 0);
 
       const groupsEl = document.getElementById('schedule-groups');
       if (sections.length === 0 && past.length === 0) {
-        groupsEl.innerHTML = `<div class="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-10 text-center space-y-2"><div class="text-3xl">✨</div><div class="text-sm font-bold text-slate-300">表示する予定がありません</div><div class="text-xs text-slate-500">下の「＋」ボタンから新しい予定を追加できます</div></div>`;
+        groupsEl.innerHTML = `<div class="bg-white border border-rose-100 rounded-3xl p-10 text-center space-y-2 soft-card"><div class="text-3xl">🌸</div><div class="text-sm font-bold text-[#4A3F44]">予定はまだありません</div><div class="text-xs text-[#9E8C93]">下の「＋」ボタンから新しく追加できます</div></div>`;
       } else if (sections.length === 0) {
-        groupsEl.innerHTML = `<div class="text-center text-slate-500 py-6 text-xs">今後の予定はありません</div>`;
+        groupsEl.innerHTML = `<div class="text-center text-[#9E8C93] py-6 text-xs">これからの予定はありません</div>`;
       } else {
         groupsEl.innerHTML = sections.map(sec => `
           <div class="space-y-2.5">
             <div class="flex items-center justify-between px-1">
-              <h3 class="text-xs font-bold tracking-wider text-slate-400">${sec.title}</h3>
-              <span class="text-[11px] text-slate-500">${sec.items.length}件</span>
+              <h3 class="text-xs font-bold text-[#8C7A82]">${sec.title}</h3>
+              <span class="text-[11px] bg-rose-50 text-rose-500 font-bold px-2 py-0.5 rounded-full">${sec.items.length}件</span>
             </div>
             <div class="space-y-2.5">${sec.items.map(createCardHTML).join('')}</div>
           </div>
@@ -447,46 +546,45 @@
         pastWrap.classList.add('hidden');
       }
     }
-
     function createCardHTML(item) {
       const diff = Math.round((new Date(item.date) - new Date(formatYMD(new Date()))) / 86400000);
-      const borderAccent = diff === 0 ? 'border-l-rose-500' : (item.type === '全体' ? 'border-l-indigo-500' : 'border-l-emerald-500');
       let badge = diff < 0
-        ? `<span class="text-[11px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md">終了</span>`
+        ? `<span class="text-[11px] bg-stone-100 text-stone-400 px-2.5 py-0.5 rounded-full">終了</span>`
         : diff === 0
-        ? `<span class="text-[11px] bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold px-2 py-0.5 rounded-md">🔥 本日</span>`
+        ? `<span class="text-[11px] bg-[#F47280] text-white font-bold px-2.5 py-0.5 rounded-full">今日</span>`
         : diff === 1
-        ? `<span class="text-[11px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold px-2 py-0.5 rounded-md">⚠️ 明日</span>`
-        : `<span class="text-[11px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md">あと${diff}日</span>`;
+        ? `<span class="text-[11px] bg-amber-400 text-white font-bold px-2.5 py-0.5 rounded-full">明日</span>`
+        : `<span class="text-[11px] bg-rose-50 text-rose-500 font-bold px-2.5 py-0.5 rounded-full">あと${diff}日</span>`;
       const typeBadge = item.type === '全体'
-        ? `<span class="text-[11px] bg-indigo-500/15 text-indigo-300 px-2 py-0.5 rounded-md font-medium">📢 全体</span>`
-        : `<span class="text-[11px] bg-emerald-500/15 text-emerald-300 px-2 py-0.5 rounded-md font-medium">🔒 個人</span>`;
+        ? `<span class="text-[11px] bg-pink-50 text-pink-500 border border-pink-100 px-2.5 py-0.5 rounded-full font-bold">📢 全体</span>`
+        : `<span class="text-[11px] bg-teal-50 text-teal-600 border border-teal-100 px-2.5 py-0.5 rounded-full font-bold">🔒 個人</span>`;
       const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
       const dObj = new Date(item.date + 'T00:00:00');
       const dLabel = isNaN(dObj) ? item.date : `${item.date.slice(5).replace('-', '/')} (${dayNames[dObj.getDay()]})`;
 
       return `
-        <div class="bg-slate-900 border border-slate-800/90 border-l-4 ${borderAccent} rounded-2xl p-4 shadow-sm hover:border-slate-700 transition">
+        <div class="bg-white border border-rose-100/90 rounded-3xl p-4 soft-card hover:border-rose-200 transition">
           <div class="flex items-start justify-between gap-2 mb-2">
             <div class="flex flex-wrap items-center gap-1.5">
               ${typeBadge}
-              <span class="text-[11px] font-bold text-slate-200 bg-slate-800 px-2.5 py-0.5 rounded-md">${escapeHTML(item.category)}</span>
+              <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full ${getCatBadgeStyle(item.category)}">${escapeHTML(item.category)}</span>
               ${badge}
             </div>
             <div class="flex items-center gap-1 shrink-0">
-              <button onclick="openEditModal('${item.id}')" class="text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1 rounded-lg transition">✏️ 編集</button>
-              <button onclick="deleteSchedule('${item.id}', '${escapeHTML(item.title)}')" class="text-slate-400 hover:text-rose-400 hover:bg-rose-950/50 text-xs px-2 py-1 rounded-lg transition">🗑️</button>
+              <button onclick="openEditModal('${item.id}')" class="text-[#8C7A82] hover:text-rose-500 bg-[#FFF9FA] hover:bg-rose-50 border border-rose-100 text-xs px-2.5 py-1 rounded-full font-bold transition">✏️ 編集</button>
+              <button onclick="deleteSchedule('${item.id}')" class="text-[#B5A4AB] hover:text-rose-500 hover:bg-rose-50 text-xs px-2 py-1 rounded-full transition">🗑️</button>
             </div>
           </div>
-          <h3 class="font-bold text-base text-white leading-snug mb-1.5">${escapeHTML(item.title)}</h3>
-          <div class="text-xs text-slate-400 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span class="text-slate-200 font-medium">📅 ${dLabel}${item.time ? ` ⏰ ${escapeHTML(item.time)}` : ''}</span>
+          <h3 class="font-bold text-[15px] text-[#4A3F44] leading-snug mb-1.5">${escapeHTML(item.title)}</h3>
+          <div class="text-xs text-[#8C7A82] flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span class="text-[#6E5D64] font-bold">📅 ${dLabel}${item.time ? ` ⏰ ${escapeHTML(item.time)}` : ''}</span>
             ${item.type === '全体' && item.userName ? `<span>👤 ${escapeHTML(item.userName)}</span>` : ''}
           </div>
-          ${item.scope ? `<div class="mt-2.5 text-xs bg-slate-950/90 text-amber-200/95 px-3 py-2 rounded-xl border border-slate-800">📖 範囲: ${escapeHTML(item.scope)}</div>` : ''}
-          ${item.memo ? `<div class="mt-2 text-xs text-slate-400 leading-relaxed">💬 ${escapeHTML(item.memo)}</div>` : ''}
+          ${item.scope ? `<div class="mt-2.5 text-xs bg-[#FFF7EB] text-amber-800 px-3.5 py-2 rounded-2xl border border-amber-100">📖 範囲: ${escapeHTML(item.scope)}</div>` : ''}
+          ${item.memo ? `<div class="mt-2 text-xs text-[#8C7A82] leading-relaxed">💬 ${escapeHTML(item.memo)}</div>` : ''}
         </div>`;
     }
+
     function renderCalendar() {
       document.getElementById('cal-title').textContent = `${calYear}年 ${calMonth + 1}月`;
       const firstDay = new Date(calYear, calMonth, 1).getDay();
@@ -499,9 +597,9 @@
         const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const dayItems = list.filter(s => s.date === dateStr);
         const isSelected = dateStr === selectedCalDate, isToday = dateStr === todayStr;
-        const dots = dayItems.slice(0, 4).map(s => `<span class="w-1.5 h-1.5 rounded-full ${s.type === '全体' ? 'bg-indigo-400' : 'bg-emerald-400'}"></span>`).join('');
-        const preview = dayItems[0] ? `<span class="text-[9px] leading-none truncate w-full px-1 mt-0.5 ${isSelected ? 'text-indigo-100' : 'text-slate-400'}">${escapeHTML(dayItems[0].title)}</span>` : '';
-        html += `<button onclick="selectCalDate('${dateStr}')" class="h-14 rounded-2xl flex flex-col items-center justify-center transition border ${isSelected ? 'bg-indigo-600 border-indigo-400 text-white font-bold shadow-md' : (isToday ? 'bg-slate-800 border-slate-600 text-white font-bold' : 'border-transparent hover:bg-slate-800/60 text-slate-300')}">
+        const dots = dayItems.slice(0, 4).map(s => `<span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : (s.type === '全体' ? 'bg-[#F47280]' : 'bg-teal-400')}"></span>`).join('');
+        const preview = dayItems[0] ? `<span class="text-[9px] leading-none truncate w-full px-1 mt-0.5 ${isSelected ? 'text-white' : 'text-[#8C7A82]'}">${escapeHTML(dayItems[0].title)}</span>` : '';
+        html += `<button onclick="selectCalDate('${dateStr}')" class="h-14 rounded-2xl flex flex-col items-center justify-center transition border ${isSelected ? 'bg-[#F47280] border-[#F47280] text-white font-bold shadow-md shadow-rose-200' : (isToday ? 'bg-rose-50 border-rose-300 text-rose-600 font-bold' : 'border-transparent hover:bg-rose-50/70 text-[#4A3F44]')}">
           <span class="text-xs">${d}</span>
           <div class="flex gap-0.5 mt-1 h-1.5">${dots}</div>
           ${preview}
@@ -512,23 +610,22 @@
       document.getElementById('cal-selected-title').textContent = `📅 ${selectedCalDate} の予定（${selectedItems.length}件）`;
       document.getElementById('cal-selected-list').innerHTML = selectedItems.length
         ? selectedItems.map(createCardHTML).join('')
-        : `<div class="text-xs text-slate-500 p-6 bg-slate-900/60 border border-slate-800/80 rounded-2xl text-center">この日の予定はありません</div>`;
+        : `<div class="text-xs text-[#9E8C93] p-6 bg-white border border-rose-100 rounded-3xl text-center">この日の予定はありません 🌸</div>`;
     }
-
     function renderRules() {
       document.getElementById('rules-list').innerHTML = allRules.map((r, idx) => {
         const daysText = r.daysBefore ? r.daysBefore.split(',').map(d => d.trim() === '0' ? '当日' : `${d.trim()}日前`).join('・') + `（${r.notifyHour}時頃）` : '日数通知なし';
         const minsText = r.beforeMins ? r.beforeMins.split(',').map(m => Number(m) >= 60 ? `${Math.floor(Number(m)/60)}時間前` : `${m.trim()}分前`).join('・') : '';
         return `
-          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-3">
+          <div class="bg-white border border-rose-100 rounded-3xl p-4 soft-card flex items-center justify-between gap-3">
             <div class="space-y-1">
-              <div class="font-bold text-sm text-white">${escapeHTML(r.category)}</div>
-              <div class="text-xs text-indigo-300">🔔 ${daysText}</div>
-              ${minsText ? `<div class="text-[11px] text-amber-300/90">⏰ 直前通知: ${minsText}</div>` : ''}
+              <div class="font-bold text-sm text-[#4A3F44] flex items-center gap-2"><span class="px-2.5 py-0.5 rounded-full text-xs ${getCatBadgeStyle(r.category)}">${escapeHTML(r.category)}</span></div>
+              <div class="text-xs text-[#6E5D64]">🔔 ${daysText}</div>
+              ${minsText ? `<div class="text-[11px] text-rose-500 font-bold">⏰ 直前通知: ${minsText}</div>` : ''}
             </div>
             <div class="flex gap-1.5 shrink-0">
-              <button onclick="editRule(${idx})" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl font-medium">編集</button>
-              <button onclick="deleteRule('${escapeHTML(r.category)}')" class="text-xs bg-rose-950/80 hover:bg-rose-900 text-rose-300 px-3 py-2 rounded-xl">削除</button>
+              <button onclick="editRule(${idx})" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-500 px-3 py-2 rounded-full font-bold">編集</button>
+              <button onclick="deleteRule(${idx})" class="text-xs bg-stone-100 hover:bg-rose-50 text-[#9E8C93] hover:text-rose-500 px-3 py-2 rounded-full">削除</button>
             </div>
           </div>`;
       }).join('');
@@ -539,16 +636,16 @@
       ['list', 'cal', 'rules'].forEach(t => {
         document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
         document.getElementById(`nav-${t}`).className = t === tab
-          ? 'flex flex-col items-center gap-0.5 px-4 py-1 text-indigo-400 font-bold text-xs transition'
-          : 'flex flex-col items-center gap-0.5 px-4 py-1 text-slate-400 hover:text-slate-200 text-xs transition';
+          ? 'flex flex-col items-center gap-0.5 px-4 py-1 text-rose-500 font-bold text-xs transition'
+          : 'flex flex-col items-center gap-0.5 px-4 py-1 text-[#9E8C93] hover:text-rose-400 text-xs transition';
       });
     }
     function setFilter(flt) {
       currentFilter = flt;
       ['all', '全体', '個人'].forEach(f => {
         document.getElementById(`flt-${f}`).className = f === flt
-          ? 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold transition'
-          : 'px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+          ? 'px-3 py-1.5 rounded-full bg-[#F47280] text-white font-bold transition'
+          : 'px-2.5 py-1.5 rounded-full text-[#8C7A82] hover:text-rose-500 transition';
       });
       renderAll();
     }
@@ -563,7 +660,7 @@
 
     function openModal(presetDate) {
       editingScheduleId = null;
-      document.getElementById('modal-title').textContent = '新しい予定を追加';
+      document.getElementById('modal-title').textContent = '🌷 新しい予定を追加';
       document.getElementById('submit-btn').textContent = '登録する';
       document.getElementById('add-date-btn').classList.remove('hidden');
       document.getElementById('add-form').reset(); resetDateInputs(); renderCategorySelect();
@@ -573,7 +670,7 @@
     function openEditModal(id) {
       const item = allSchedules.find(s => String(s.id) === String(id)); if (!item) return;
       editingScheduleId = id;
-      document.getElementById('modal-title').textContent = '予定を編集';
+      document.getElementById('modal-title').textContent = '✏️ 予定を編集';
       document.getElementById('submit-btn').textContent = '変更を保存する';
       document.getElementById('add-date-btn').classList.add('hidden');
       const radio = document.querySelector(`input[name="type"][value="${item.type}"]`); if (radio) radio.checked = true;
@@ -597,10 +694,10 @@
     }
     function addDateInput() {
       const div = document.createElement('div'); div.className = 'flex gap-2';
-      div.innerHTML = `<input type="date" required class="inp-date flex-1 bg-slate-950 border border-slate-800 rounded-2xl p-3 text-white" /><button type="button" onclick="this.parentElement.remove()" class="px-3.5 bg-slate-800 rounded-2xl text-slate-300">✕</button>`;
+      div.innerHTML = `<input type="date" required class="inp-date flex-1 bg-[#FFF9FA] border border-rose-100 rounded-2xl p-3 text-[#4A3F44]" /><button type="button" onclick="this.parentElement.remove()" class="px-3.5 bg-rose-50 text-rose-400 rounded-2xl font-bold">✕</button>`;
       document.getElementById('date-inputs').appendChild(div);
     }
-    function resetDateInputs() { document.getElementById('date-inputs').innerHTML = `<input type="date" required class="inp-date w-full bg-slate-950 border border-slate-800 rounded-2xl p-3 text-white" />`; }
+    function resetDateInputs() { document.getElementById('date-inputs').innerHTML = `<input type="date" required class="inp-date w-full bg-[#FFF9FA] border border-rose-100 rounded-2xl p-3 text-[#4A3F44]" />`; }
     function setLoading(flag) { document.getElementById('loading-bar').classList.toggle('hidden', !flag); }
     function showError(msg) { const b = document.getElementById('error-box'); b.textContent = msg; b.classList.remove('hidden'); }
     function hideError() { document.getElementById('error-box').classList.add('hidden'); }
