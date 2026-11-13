@@ -48,7 +48,7 @@
       <div class="grid grid-cols-3 bg-slate-800 p-1 rounded-xl text-sm font-medium">
         <button id="tab-list" onclick="switchTab('list')" class="py-2 rounded-lg bg-indigo-600 text-white transition">📋 予定一覧</button>
         <button id="tab-cal" onclick="switchTab('cal')" class="py-2 rounded-lg text-slate-400 transition">🗓️ カレンダー</button>
-        <button id="tab-rules" onclick="switchTab('rules')" class="py-2 rounded-lg text-slate-400 transition">🔔 通知設定</button>
+        <button id="tab-rules" onclick="switchTab('rules')" class="py-2 rounded-lg text-slate-400 transition">🔔 カテゴリ・通知</button>
       </div>
     </div>
     <div id="filter-bar" class="px-4 pt-3 flex gap-2 text-xs">
@@ -71,8 +71,41 @@
       </div>
       <div id="cal-selected-list" class="mt-4 space-y-2"></div>
     </section>
-    <section id="view-rules" class="hidden p-4 space-y-3">
-      <div class="bg-slate-800/70 border border-slate-700 rounded-xl p-4 text-xs text-slate-300">カテゴリごとの自動通知タイミングです（変更はスプレッドシートの「通知ルール」シートで行えます）。</div>
+    <section id="view-rules" class="hidden p-4 space-y-4">
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 id="rule-form-title" class="font-bold text-sm text-indigo-300">＋ カテゴリの追加・通知設定</h3>
+          <button type="button" onclick="resetRuleForm()" class="text-xs text-slate-400 hover:text-white">クリア</button>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">カテゴリ名 *</label>
+          <input id="rule-cat" type="text" placeholder="例：課題、テスト、部活、バイト" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">日数通知（複数選択可）</label>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <label class="bg-slate-900 border border-slate-700 px-2.5 py-1.5 rounded-lg cursor-pointer"><input type="checkbox" class="rule-day mr-1" value="0" checked />当日</label>
+            <label class="bg-slate-900 border border-slate-700 px-2.5 py-1.5 rounded-lg cursor-pointer"><input type="checkbox" class="rule-day mr-1" value="1" checked />1日前</label>
+            <label class="bg-slate-900 border border-slate-700 px-2.5 py-1.5 rounded-lg cursor-pointer"><input type="checkbox" class="rule-day mr-1" value="2" />2日前</label>
+            <label class="bg-slate-900 border border-slate-700 px-2.5 py-1.5 rounded-lg cursor-pointer"><input type="checkbox" class="rule-day mr-1" value="3" />3日前</label>
+            <label class="bg-slate-900 border border-slate-700 px-2.5 py-1.5 rounded-lg cursor-pointer"><input type="checkbox" class="rule-day mr-1" value="7" />7日前</label>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">日数通知を送る時間帯</label>
+          <select id="rule-hour" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-sm"></select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">直前通知（予定に「時間」を入力した時に作動）</label>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <label class="bg-slate-900 border border-slate-700 px-2.5 py-1.5 rounded-lg cursor-pointer"><input type="checkbox" class="rule-min mr-1" value="60" />1時間前</label>
+            <label class="bg-slate-900 border border-slate-700 px-2.5 py-1.5 rounded-lg cursor-pointer"><input type="checkbox" class="rule-min mr-1" value="30" />30分前</label>
+            <label class="bg-slate-900 border border-slate-700 px-2.5 py-1.5 rounded-lg cursor-pointer"><input type="checkbox" class="rule-min mr-1" value="10" />10分前</label>
+          </div>
+        </div>
+        <button type="button" id="save-rule-btn" onclick="saveRule()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-sm">この内容で保存する</button>
+      </div>
+      <div class="text-xs text-slate-400 px-1">※土・日・月の予定は毎週金曜18時に自動通知されます</div>
       <div id="rules-list" class="space-y-2"></div>
     </section>
     <button onclick="openModal()" class="fixed bottom-6 right-6 bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition text-white font-bold w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-3xl z-30">＋</button>
@@ -93,9 +126,7 @@
         </div>
         <div>
           <label class="block text-xs text-slate-400 mb-1">カテゴリ</label>
-          <select id="inp-category" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white">
-            <option value="課題">📚 課題</option><option value="テスト">📝 テスト</option><option value="行事">🏫 行事</option><option value="バイト">💼 バイト</option><option value="個人予定">📌 個人予定</option>
-          </select>
+          <select id="inp-category" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></select>
         </div>
         <div>
           <label class="block text-xs text-slate-400 mb-1">タイトル *</label>
@@ -108,7 +139,7 @@
           </div>
           <div id="date-inputs" class="space-y-2"><input type="date" required class="inp-date w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" /></div>
         </div>
-        <div><label class="block text-xs text-slate-400 mb-1">時間（任意）</label><input id="inp-time" type="time" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" /></div>
+        <div><label class="block text-xs text-slate-400 mb-1">時間（任意・直前通知を使う場合は入力）</label><input id="inp-time" type="time" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" /></div>
         <div><label class="block text-xs text-slate-400 mb-1">課題範囲・持ち物（任意）</label><input id="inp-scope" type="text" placeholder="例：P.24〜31" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white" /></div>
         <div><label class="block text-xs text-slate-400 mb-1">メモ（任意）</label><textarea id="inp-memo" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white"></textarea></div>
         <button type="submit" id="submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-lg">登録する</button>
@@ -120,9 +151,14 @@
     let calYear = new Date().getFullYear(), calMonth = new Date().getMonth(), selectedCalDate = formatYMD(new Date());
 
     window.addEventListener('DOMContentLoaded', async () => {
+      const hourSel = document.getElementById('rule-hour');
+      for (let h = 0; h < 24; h++) {
+        const opt = document.createElement('option'); opt.value = h; opt.textContent = `${h}時頃`;
+        if (h === 7) opt.selected = true;
+        hourSel.appendChild(opt);
+      }
       if (window.location.hash.includes('access_token=')) {
-        const params = new URLSearchParams(window.location.hash.substring(1));
-        const token = params.get('access_token');
+        const token = new URLSearchParams(window.location.hash.substring(1)).get('access_token');
         if (token) { localStorage.setItem('discord_token', token); history.replaceState(null, '', window.location.pathname); }
       }
       const token = localStorage.getItem('discord_token');
@@ -135,11 +171,7 @@
         if (!guildsRes.ok) { localStorage.removeItem('discord_token'); showLogin(); return; }
         const guilds = await guildsRes.json();
         const isMember = guilds.some(g => g.id === CONFIG.GUILD_ID);
-        currentUser = {
-          id: user.id,
-          name: user.global_name || user.username,
-          avatar: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png'
-        };
+        currentUser = { id: user.id, name: user.global_name || user.username, avatar: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png' };
         showApp();
         if (!isMember) { showError(`指定されたサーバーへの参加が確認できませんでした。（設定中のサーバーID: ${CONFIG.GUILD_ID}）`); return; }
         await fetchData();
@@ -155,6 +187,7 @@
       document.getElementById('user-name').textContent = currentUser.name;
       document.getElementById('user-avatar').src = currentUser.avatar;
     }
+
     async function fetchData() {
       setLoading(true); hideError();
       try {
@@ -196,7 +229,61 @@
       finally { setLoading(false); }
     }
 
-    function renderAll() { renderList(); renderCalendar(); renderRules(); }
+    async function saveRule() {
+      const category = document.getElementById('rule-cat').value.trim();
+      if (!category) { alert('カテゴリ名を入力してください'); return; }
+      const daysBefore = Array.from(document.querySelectorAll('.rule-day:checked')).map(el => el.value).join(',');
+      const notifyHour = document.getElementById('rule-hour').value;
+      const beforeMins = Array.from(document.querySelectorAll('.rule-min:checked')).map(el => el.value).join(',');
+      const btn = document.getElementById('save-rule-btn'); btn.disabled = true; btn.textContent = '保存中...';
+      try {
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveRule', userId: currentUser.id, token: CONFIG.APP_SECRET, category, daysBefore, notifyHour, beforeMins }) });
+        const data = await res.json();
+        if (data.status === 'ok') { resetRuleForm(); await fetchData(); }
+        else alert('保存エラー: ' + data.message);
+      } catch (err) { alert('通信エラーが発生しました'); }
+      finally { btn.disabled = false; btn.textContent = 'この内容で保存する'; }
+    }
+
+    async function deleteRule(category) {
+      if (!confirm(`カテゴリ「${category}」を削除しますか？`)) return;
+      setLoading(true);
+      try {
+        const res = await fetch(CONFIG.GAS_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'deleteRule', userId: currentUser.id, token: CONFIG.APP_SECRET, category }) });
+        const data = await res.json();
+        if (data.status === 'ok') await fetchData();
+        else alert('削除エラー: ' + data.message);
+      } catch (err) { alert('通信エラーが発生しました'); }
+      finally { setLoading(false); }
+    }
+
+    function editRule(idx) {
+      const r = allRules[idx];
+      if (!r) return;
+      document.getElementById('rule-form-title').textContent = `✏️ 「${r.category}」の通知設定を編集`;
+      document.getElementById('rule-cat').value = r.category;
+      document.getElementById('rule-hour').value = r.notifyHour;
+      const dList = r.daysBefore ? r.daysBefore.split(',').map(s => s.trim()) : [];
+      document.querySelectorAll('.rule-day').forEach(el => { el.checked = dList.includes(el.value); });
+      const mList = r.beforeMins ? r.beforeMins.split(',').map(s => s.trim()) : [];
+      document.querySelectorAll('.rule-min').forEach(el => { el.checked = mList.includes(el.value); });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetRuleForm() {
+      document.getElementById('rule-form-title').textContent = '＋ カテゴリの追加・通知設定';
+      document.getElementById('rule-cat').value = '';
+      document.getElementById('rule-hour').value = '7';
+      document.querySelectorAll('.rule-day').forEach(el => { el.checked = (el.value === '0' || el.value === '1'); });
+      document.querySelectorAll('.rule-min').forEach(el => { el.checked = false; });
+    }
+
+    function renderAll() { renderCategorySelect(); renderList(); renderCalendar(); renderRules(); }
+    function renderCategorySelect() {
+      const sel = document.getElementById('inp-category');
+      const cats = allRules.length ? allRules.map(r => r.category) : ['課題', 'テスト', '行事', 'バイト', '個人予定'];
+      sel.innerHTML = cats.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+    }
     function getFilteredSchedules() { return currentFilter === 'all' ? allSchedules : allSchedules.filter(s => s.type === currentFilter); }
     function renderList() {
       const list = getFilteredSchedules();
@@ -223,7 +310,11 @@
       document.getElementById('cal-selected-list').innerHTML = `<div class="text-xs font-bold text-slate-400 px-1">${selectedCalDate} の予定（${selectedItems.length}件）</div>` + (selectedItems.length ? selectedItems.map(createCardHTML).join('') : `<div class="text-xs text-slate-500 p-4 bg-slate-800/40 rounded-xl text-center">この日の予定はありません</div>`);
     }
     function renderRules() {
-      document.getElementById('rules-list').innerHTML = allRules.map(r => `<div class="bg-slate-800 border border-slate-700 rounded-xl p-3.5 flex items-center justify-between"><span class="font-bold text-sm">${escapeHTML(r.category)}</span><span class="text-xs text-indigo-300 bg-indigo-950 border border-indigo-800 px-2.5 py-1 rounded-lg">${r.daysBefore.split(',').map(d => d.trim() === '0' ? '当日' : `${d.trim()}日前`).join('・')}（${r.notifyHour}時頃）</span></div>`).join('');
+      document.getElementById('rules-list').innerHTML = allRules.map((r, idx) => {
+        const daysText = r.daysBefore ? r.daysBefore.split(',').map(d => d.trim() === '0' ? '当日' : `${d.trim()}日前`).join('・') + `（${r.notifyHour}時頃）` : '日数通知なし';
+        const minsText = r.beforeMins ? ' / 直前: ' + r.beforeMins.split(',').map(m => Number(m) >= 60 ? `${Math.floor(Number(m)/60)}時間前` : `${m.trim()}分前`).join('・') : '';
+        return `<div class="bg-slate-800 border border-slate-700 rounded-xl p-3.5 flex items-center justify-between gap-2"><div><div class="font-bold text-sm text-white">${escapeHTML(r.category)}</div><div class="text-xs text-indigo-300 mt-0.5">${daysText}${minsText}</div></div><div class="flex gap-1.5 shrink-0"><button onclick="editRule(${idx})" class="text-xs bg-slate-700 hover:bg-slate-600 px-2.5 py-1.5 rounded-lg">編集</button><button onclick="deleteRule('${escapeHTML(r.category)}')" class="text-xs bg-rose-950 text-rose-300 hover:bg-rose-900 px-2.5 py-1.5 rounded-lg">削除</button></div></div>`;
+      }).join('');
     }
     function switchTab(tab) {
       currentTab = tab;
